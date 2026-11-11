@@ -1,37 +1,52 @@
 <!doctype html>
-<html>
-     <head>
-          <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-
-     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1922314025213985"
-     crossorigin="anonymous"></script>
-
-</head>
-     <body>
-<title>Super Wassel</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Super Wassel — Jeu de plateforme rétro gratuit</title>
+  <meta name="description" content="Super Wassel : jeu de plateforme rétro en JavaScript. Cours, saute, fracasse les briques, attrape la couronne et atteins le château à travers 3 niveaux jour, nuit et crépuscule.">
+  <link rel="canonical" href="https://superwassel.live/">
+  <meta name="theme-color" content="#0f1a3b">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Super Wassel — Jeu de plateforme rétro">
+  <meta property="og:description" content="3 niveaux, slimes, scarabées, blocs ?, couronne étoile et château final. Joue gratuitement !">
+  <meta property="og:url" content="https://superwassel.live/">
+  <meta property="og:image" content="https://superwassel.live/badge.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="badge.png">
+  <link rel="apple-touch-icon" href="avatar.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1922314025213985" crossorigin="anonymous"></script>
 <style>
-  /* Layout: 16:9 play field centred on a navy ground, slim header above, touch pad below on phones. */
+  /* ===== Super Wassel V1.1 — visuel amélioré ===== */
   :root {
     --bg: #0f1a3b;
+    --bg2: #0a1230;
     --fg: #eef2ff;
     --muted: #9fb0e0;
     --gold: #ffd23f;
     --red: #e5262e;
     --ink: #14306e;
+    --card: #16245c;
     --font-display: "Lilita One", "Trebuchet MS", system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
     --chrome: 92px;
     color-scheme: dark;
   }
-  @media (pointer: coarse) { :root { --chrome: 200px; } }
+  @media (pointer: coarse) { :root { --chrome: 208px; } }
+  * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: var(--bg);
+    margin: 0;
+    background:
+      radial-gradient(1200px 500px at 50% -10%, #243a86 0%, transparent 60%),
+      radial-gradient(800px 400px at 90% 110%, #1c2a66 0%, transparent 55%),
+      var(--bg);
     color: var(--fg);
     font-family: var(--font-display);
-    padding-block: 10px;
+    padding-block: 10px max(10px, env(safe-area-inset-bottom, 0px));
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     display: flex;
@@ -39,17 +54,25 @@
     align-items: center;
     gap: 8px;
     overflow: hidden;
+    min-height: 100dvh;
   }
   header, .stage { width: min(100%, calc((100dvh - var(--chrome)) * 800 / 448)); }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-  h1 { margin: 0; font-size: 20px; font-weight: 400; letter-spacing: .06em; color: var(--gold); text-transform: uppercase; }
-  .tools { display: flex; gap: 8px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand img { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  h1 { margin: 0; font-size: 20px; font-weight: 400; letter-spacing: .06em; color: var(--gold); text-transform: uppercase; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+  h1 small { display: block; font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: .14em; text-transform: none; }
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .tools button {
-    font: 500 12px var(--font-mono); color: var(--muted); background: transparent;
-    border: 1px solid #34457d; padding: 5px 10px; cursor: pointer;
+    font: 500 12px var(--font-mono); color: var(--muted); background: rgba(255,255,255,.04);
+    border: 1px solid #34457d; padding: 6px 11px; border-radius: 999px; cursor: pointer;
+    transition: transform .12s ease, border-color .15s, color .15s, background .15s;
   }
-  .tools button:hover { color: var(--fg); border-color: var(--muted); }
-  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .tools button:hover { color: var(--fg); border-color: var(--muted); background: rgba(255,255,255,.08); transform: translateY(-1px); }
+  .tools button:active { transform: translateY(0) scale(.97); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .vol { display: flex; align-items: center; gap: 6px; font: 500 12px var(--font-mono); color: var(--muted); border: 1px solid #34457d; border-radius: 999px; padding: 4px 10px; background: rgba(255,255,255,.04); }
+  .vol input[type="range"] { width: 80px; accent-color: var(--gold); cursor: pointer; }
 
   .stage {
     position: relative;
@@ -57,11 +80,12 @@
     aspect-ratio: 800 / 448;
     background: #000;
     border: 3px solid #0a1230;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06) inset;
   }
   canvas { display: block; width: 100%; height: 100%; }
 
@@ -70,14 +94,28 @@
     position: absolute; left: 47%; top: 44%; width: 28%; height: 14%;
     background: transparent; border: 0; cursor: pointer; border-radius: 12px;
   }
+  .play-hit::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 14px;
+    border: 3px solid rgba(255,255,255,.9);
+    animation: playPulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes playPulse {
+    0%, 100% { opacity: .15; transform: scale(.98); }
+    50% { opacity: .85; transform: scale(1.03); }
+  }
   .play-hit:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .play-hit:focus-visible::after { animation: none; opacity: 1; }
 
   #end {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     background: rgba(10, 16, 44, .82);
+    backdrop-filter: blur(4px);
+    opacity: 1; transition: opacity .25s ease;
   }
-  #end[hidden] { display: none; }
-  .end-box { display: flex; flex-direction: column; align-items: center; gap: 2cqw; text-align: center; padding: 0 4cqw; }
+  #end[hidden] { display: none; opacity: 0; }
+  .end-box { display: flex; flex-direction: column; align-items: center; gap: 2cqw; text-align: center; padding: 0 4cqw; animation: popIn .35s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes popIn { from { transform: scale(.85) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
   .end-box h2 {
     margin: 0; font-weight: 400; font-size: 10cqw; color: var(--gold);
     -webkit-text-stroke: .8cqw var(--ink); paint-order: stroke fill;
@@ -88,10 +126,14 @@
     margin-top: 1cqw; font: 400 4cqw "Kaushan Script", "Brush Script MT", cursive; font-style: italic; color: #fff; cursor: pointer;
     background: linear-gradient(#f23a3f, #c4121f); border: .5cqw solid #7d0d14; padding: .8cqw 5cqw 1.2cqw;
     border-radius: 1.2cqw; text-shadow: 0 .3cqw 0 rgba(0,0,0,.35);
+    transition: transform .12s ease, filter .15s;
+    box-shadow: 0 6px 20px rgba(229,38,46,.4);
   }
-  .retry:hover { filter: brightness(1.12); }
+  .retry:hover { filter: brightness(1.12); transform: translateY(-1px) scale(1.02); }
+  .retry:active { transform: scale(.97); }
 
-  .hint { font: 400 12px var(--font-mono); color: var(--muted); text-align: center; }
+  .hint { font: 400 12px var(--font-mono); color: var(--muted); text-align: center; max-width: 720px; }
+  .hint kbd { background: rgba(255,255,255,.08); border: 1px solid #34457d; border-bottom-width: 2px; border-radius: 6px; padding: 0 6px; font-family: inherit; }
   @media (pointer: coarse) { .hint { display: none; } }
 
   .pad { display: none; width: min(100%, 520px); justify-content: space-between; gap: 12px; touch-action: none; }
@@ -101,16 +143,36 @@
     width: 68px; height: 68px; border-radius: 50%; border: 3px solid #e9efff;
     background: rgba(8, 14, 36, .85); color: #fff; font: 400 26px var(--font-display);
     display: grid; place-items: center; touch-action: none; user-select: none; -webkit-user-select: none; padding: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,.45);
+    transition: transform .08s, background .12s;
   }
-  .pad button:active { background: #2b3d7a; }
+  .pad button:active { background: #2b3d7a; transform: scale(.93); }
   .pad .b { font-size: 22px; }
+
+  .portrait-tip { display: none; font: 500 11px var(--font-mono); color: var(--gold); }
+  @media (orientation: portrait) and (pointer: coarse) { .portrait-tip { display: block; } }
+
+  footer { font: 400 11px var(--font-mono); color: var(--muted); opacity: .8; }
+  footer a { color: var(--gold); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .play-hit::after, .end-box, .retry { animation: none; }
+    * { transition: none !important; }
+  }
 </style>
+</head>
+<body>
 
 <header>
-  <h1>Super Wassel</h1>
+  <div class="brand">
+    <img src="avatar.png" alt="Avatar Super Wassel" width="30" height="30">
+    <h1>Super Wassel <small>plateforme rétro · 3 niveaux</small></h1>
+  </div>
   <div class="tools">
     <button id="pauseBtn" type="button">Pause</button>
     <button id="muteBtn" type="button">Son : on</button>
+    <label class="vol" title="Volume">🔊 <input id="volRange" type="range" min="0" max="100" value="90" aria-label="Volume"></label>
+    <button id="fsBtn" type="button" title="Plein écran">⛶</button>
   </div>
 </header>
 
@@ -126,7 +188,8 @@
   </div>
 </div>
 
-<div class="hint">← → ou A D : bouger · Espace ou ↑ : sauter · Shift ou X : courir et tirer · P : pause · M : son</div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> ou <kbd>A</kbd> <kbd>D</kbd> : bouger · <kbd>Espace</kbd> ou <kbd>↑</kbd> : sauter · <kbd>Shift</kbd> ou <kbd>X</kbd> : courir et tirer · <kbd>P</kbd> : pause · <kbd>M</kbd> : son</div>
+<div class="portrait-tip">🔄 Tourne ton téléphone pour une plus grande zone de jeu</div>
 
 <div class="pad" id="pad">
   <div class="grp">
@@ -139,9 +202,46 @@
   </div>
 </div>
 
+<footer>© Super Wassel · fait avec ❤️ en JS vanilla · <a href="https://superwassel.live">superwassel.live</a></footer>
+
 <script src="audio.js"></script>
 <script src="art.js"></script>
 <script src="title.js"></script>
 <script src="game.js"></script>
+<script>
+(function () {
+  // Volume persistant + plein écran (surcouche, ne touche pas au moteur)
+  try {
+    var AU = window.WASSEL && window.WASSEL.audio;
+    var vol = document.getElementById('volRange');
+    var muteBtn = document.getElementById('muteBtn');
+    if (AU && vol) {
+      var v0 = AU.getVolume ? AU.getVolume() : 0.9;
+      vol.value = Math.round(v0 * 100);
+      if (AU.isMuted && AU.isMuted()) { muteBtn.textContent = 'Son : off'; vol.disabled = true; }
+      vol.addEventListener('input', function () {
+        AU.init();
+        AU.setVolume(vol.value / 100);
+        if (AU.isMuted() && vol.value > 0) { AU.setMuted(false); muteBtn.textContent = 'Son : on'; vol.disabled = false; }
+      });
+      // garde le slider synchro quand M / bouton mute est utilisé dans game.js
+      new MutationObserver(function () {
+        var off = /off/.test(muteBtn.textContent);
+        vol.disabled = off;
+      }).observe(muteBtn, { childList: true, characterData: true, subtree: true });
+    }
+    var fs = document.getElementById('fsBtn');
+    var stage = document.getElementById('stage');
+    if (fs && stage) fs.addEventListener('click', function () {
+      try {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (stage.requestFullscreen) stage.requestFullscreen();
+        else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      } catch (e) {}
+    });
+  } catch (e) {}
+})();
+</script>
 
-</body></html>
+<script>window.__CF$cv$params={r:'a590a0deac0ce189',t:'MTc5NDQzNTA0MQ==',u:'01a1cca9c89675dfbb76d9b0d9e28149',ut:'lDaCA3QsTTQqPgQ2PdCjYBWOOhSSh1EKQHV4NdFOaGw-1794435041-1.2.1.1-sXaO2rp_Ms59RAFvaCE2fYJjguueeBXvXk1pvNwLU67zzxW4qZ1kBc0bfcxkpZBhoS3aWNV14opPEnmVMWHGYKxXsqTtfhKU86JLm4xjlxI',i:60};(function(){if(!document.body)return;var l=window.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/precursor/main.js?ray=a590a0deac0ce189',s=document.createElement('script');s.src=o?new URL(u,o).href:u;document.head.appendChild(s);})();</script></body>
+</html>

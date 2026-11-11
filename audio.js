@@ -4,6 +4,10 @@
   var W = window.WASSEL = window.WASSEL || {};
   var AC = null, master = null, musicBus = null, sfxBus = null, noiseBuf = null;
   var muted = false, theme = null, want = null, timer = null, nextT = 0, step = 0, tempo = 1, starMode = false, hurryOn = false;
+  var vol = 0.9;
+  try { var _v = parseFloat(localStorage.getItem('wassel-vol')); if (!isNaN(_v)) vol = Math.min(1, Math.max(0, _v)); } catch (e) {}
+  try { muted = localStorage.getItem('wassel-muted') === '1'; } catch (e) {}
+  function applyGain() { if (master) master.gain.value = muted ? 0 : vol; }
 
   function init() {
     if (AC) { if (AC.state === 'suspended' && AC.resume) { try { AC.resume(); } catch (e) {} } return; }
@@ -11,7 +15,7 @@
       var C = window.AudioContext || window.webkitAudioContext;
       if (!C) return;
       AC = new C();
-      master = AC.createGain(); master.gain.value = muted ? 0 : 0.9;
+      master = AC.createGain(); master.gain.value = muted ? 0 : vol;
       var comp = AC.createDynamicsCompressor();
       comp.threshold.value = -14; comp.ratio.value = 5;
       master.connect(comp); comp.connect(AC.destination);
@@ -258,8 +262,10 @@
     music: function (name) { want = name; if (AC) startTheme(name); },
     stop: function () { want = null; theme = null; },
     pause: function (p) { if (!AC) return; try { if (p) AC.suspend(); else AC.resume(); } catch (e) {} },
-    setMuted: function (m) { muted = m; if (master) master.gain.value = m ? 0 : 0.9; },
+    setMuted: function (m) { muted = !!m; applyGain(); try { localStorage.setItem('wassel-muted', muted ? '1' : '0'); } catch (e) {} },
     isMuted: function () { return muted; },
+    setVolume: function (v) { vol = Math.min(1, Math.max(0, +v || 0)); applyGain(); try { localStorage.setItem('wassel-vol', String(vol)); } catch (e) {} },
+    getVolume: function () { return vol; },
     setStar: function (on) { starMode = on; tempo = starMode ? 1.3 : (hurryOn ? 1.22 : 1); },
     hurry: function (on) { hurryOn = on; tempo = starMode ? 1.3 : (hurryOn ? 1.22 : 1); }
   };

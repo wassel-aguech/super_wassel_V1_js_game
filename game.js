@@ -151,7 +151,44 @@
     b.flagX = 162;
     return b.done('1-3', 'dusk', 330, 'dusk');
   }
-  var LEVELS = [level1, level2, level3];
+  function level4() {
+    // 1-4 "Crepuscule expert" : sauts longs, tuyaux hauts, carapaces en chaine
+    var b = new Builder(222);
+    b.ground(0, 222)
+      .cut(24, 28).cut(44, 49).cut(70, 75).cut(96, 101)
+      .cut(124, 129).cut(150, 155).cut(174, 179);
+    // plateformes de secours au-dessus des grands trous (oblige la precision)
+    b.platform(45, 48, 10).platform(71, 74, 10).platform(97, 100, 10)
+      .platform(125, 128, 10).platform(151, 154, 10).platform(175, 178, 10);
+    // plateformes hautes a bonus
+    b.platform(52, 58, 8).platform(106, 112, 8).platform(132, 138, 8).platform(184, 190, 8);
+    // blocs : peu de recompenses, bien places
+    b.put(12, 8, '?').put(14, 8, 'B').put(15, 8, 'M').put(16, 8, 'B');
+    b.put(54, 8, '?').put(56, 8, 'W').put(108, 8, 'M').put(110, 8, '?');
+    b.put(134, 8, '?').put(136, 8, 'M').put(186, 8, '?').put(188, 8, 'B');
+    b.row(60, 64, 6, 'B').put(62, 6, '?');
+    b.row(160, 164, 6, 'B').put(162, 6, 'M');
+    // pieces : guident les sauts
+    b.coins(24, 8, 4); b.coins(44, 8, 5); b.coins(70, 8, 5); b.coins(96, 8, 5);
+    b.coins(124, 8, 5); b.coins(150, 8, 5); b.coins(174, 8, 5);
+    b.coins(53, 6, 3); b.coins(107, 6, 3); b.coins(185, 6, 3);
+    // tuyaux : hauts, a enchaîner
+    b.pipe(18, 2).pipe(36, 3).pipe(40, 2).pipe(60, 4).pipe(66, 2);
+    b.pipe(110, 3).pipe(116, 4).pipe(136, 4).pipe(144, 2).pipe(166, 3).pipe(192, 2);
+    // ennemis : dense, alterne slime / shellbug, certains sur plateformes
+    b.enemy('slime', 20, 11).enemy('shellbug', 32, 11).enemy('slime', 34, 11);
+    b.enemy('slime', 54, 11).enemy('shellbug', 58, 11).enemy('slime', 63, 11);
+    b.enemy('shellbug', 80, 11).enemy('slime', 84, 11).enemy('shellbug', 89, 11).enemy('slime', 92, 11);
+    b.enemy('slime', 106, 11).enemy('shellbug', 113, 11).enemy('slime', 118, 11);
+    b.enemy('shellbug', 133, 11).enemy('slime', 139, 11).enemy('slime', 144, 11);
+    b.enemy('slime', 159, 11).enemy('shellbug', 166, 11).enemy('slime', 170, 11);
+    b.enemy('shellbug', 184, 11).enemy('slime', 190, 11).enemy('shellbug', 196, 11).enemy('slime', 199, 11);
+    b.enemy('shellbug', 54, 7).enemy('slime', 108, 7).enemy('shellbug', 186, 7);
+    b.stairs(204, 7);
+    b.flagX = 214;
+    return b.done('1-4', 'dusk', 360, 'dusk');
+  }
+  var LEVELS = [level1, level2, level3, level4];
 
   /* ------------------------------------------------------------------- état */
   var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play',
@@ -607,7 +644,7 @@
     ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time }, avatar, G.t);
     if (P.star > 0) ART.outlineText(ctx, 'Couronne ' + Math.ceil(P.star) + 's', VW / 2, 34, 20, 'center', '#ffe066');
     if (G.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.5, G.flash) + ')'; ctx.fillRect(0, 0, VW, VH); }
-    if (G.state === 'intro') drawCard(['Niveau ' + L.name, G.level === 0 ? 'Cours, saute et atteins le château' : ''], true);
+    if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !'][G.level] || ''], true);
     else if (G.state === 'pause') drawCard(['Pause', 'Appuie sur P pour reprendre'], false);
   }
 
