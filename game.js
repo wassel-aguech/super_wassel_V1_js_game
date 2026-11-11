@@ -5,6 +5,11 @@
   var T = 32, VW = 800, VH = 448, ROWS = 14, STEP = 1 / 60, PI = Math.PI, TAU = PI * 2;
   var SOLID = 'GB?MWSUpqlr';
   function $(id) { return document.getElementById(id); }
+   function setOnlinePlaying(value) {
+     try {
+       if (window.WASSELOnline) window.WASSELOnline.setPlaying(value);
+     } catch (e) {}
+   }
   var canvas = $('game'), ctx = canvas.getContext('2d'), stage = $('stage');
   var playBtn = $('playBtn'), endEl = $('end'), endTitle = $('endTitle'), endText = $('endText');
   var muteBtn = $('muteBtn'), pauseBtn = $('pauseBtn'), pad = $('pad');
@@ -64,8 +69,8 @@
     muteBtn.textContent = AU.isMuted() ? 'Son : off' : 'Son : on';
   }
   function togglePause() {
-    if (G.state === 'play') { G.prev = 'play'; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true); }
-    else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now(); }
+    if (G.state === 'play') { G.prev = 'play'; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true);setOnlinePlaying(false) }
+    else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now();setOnlinePlaying(true) }
   }
   muteBtn.addEventListener('click', function () { AU.init(); toggleMute(); });
   pauseBtn.addEventListener('click', togglePause);
@@ -218,16 +223,18 @@
     makePlayer(L.sx, L.sy, power);
     jumpBuf = 0; fireReq = false;
   }
-  function startIntro() { G.state = 'intro'; G.timer = 2.0; AU.stop(); }
+  function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
   function startGame() {
     G.lives = 3; G.score = 0; G.coins = 0;
     loadLevel(0, 0);
     playBtn.hidden = true; endEl.hidden = true; pauseBtn.textContent = 'Pause';
     startIntro();
+	setOnlinePlaying(true);
   }
   function finishRun(won) {
     if (G.score > best) { best = G.score; try { localStorage.setItem('wassel-best', String(best)); } catch (e) {} }
     G.state = won ? 'win' : 'over';
+	setOnlinePlaying(false);
     endTitle.textContent = won ? 'Bravo Wassel !' : 'Game over';
     endText.textContent = (won ? 'Le château est à toi. ' : '') + 'Score : ' + G.score + ' · Meilleur : ' + best;
     endEl.hidden = false;
@@ -516,7 +523,7 @@
   function update(dt) {
     G.t += dt;
     if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
-      if (G.state === 'over' || G.state === 'win') updateParticles(dt);
+      if (G.state === 'over' || G.state === 'win') updateParticles(dt);setOnlinePlaying(true)
       return;
     }
     if (G.freeze > 0) { G.freeze -= dt; return; }
