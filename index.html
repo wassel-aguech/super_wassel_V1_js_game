@@ -1,0 +1,138 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Super Wassel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: 16:9 play field centred on a navy ground, slim header above, touch pad below on phones. */
+  :root {
+    --bg: #0f1a3b;
+    --fg: #eef2ff;
+    --muted: #9fb0e0;
+    --gold: #ffd23f;
+    --red: #e5262e;
+    --ink: #14306e;
+    --font-display: "Lilita One", "Trebuchet MS", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --chrome: 92px;
+    color-scheme: dark;
+  }
+  @media (pointer: coarse) { :root { --chrome: 200px; } }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-display);
+    padding-block: 10px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+  header, .stage { width: min(100%, calc((100dvh - var(--chrome)) * 800 / 448)); }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 20px; font-weight: 400; letter-spacing: .06em; color: var(--gold); text-transform: uppercase; }
+  .tools { display: flex; gap: 8px; }
+  .tools button {
+    font: 500 12px var(--font-mono); color: var(--muted); background: transparent;
+    border: 1px solid #34457d; padding: 5px 10px; cursor: pointer;
+  }
+  .tools button:hover { color: var(--fg); border-color: var(--muted); }
+  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  .stage {
+    position: relative;
+    container-type: inline-size;
+    aspect-ratio: 800 / 448;
+    background: #000;
+    border: 3px solid #0a1230;
+    border-radius: 8px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Zone cliquable posée sur le "Let's Play !" dessiné dans le canvas */
+  .play-hit {
+    position: absolute; left: 47%; top: 44%; width: 28%; height: 14%;
+    background: transparent; border: 0; cursor: pointer; border-radius: 12px;
+  }
+  .play-hit:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+  #end {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(10, 16, 44, .82);
+  }
+  #end[hidden] { display: none; }
+  .end-box { display: flex; flex-direction: column; align-items: center; gap: 2cqw; text-align: center; padding: 0 4cqw; }
+  .end-box h2 {
+    margin: 0; font-weight: 400; font-size: 10cqw; color: var(--gold);
+    -webkit-text-stroke: .8cqw var(--ink); paint-order: stroke fill;
+    text-shadow: 0 .8cqw 0 #b45a00; letter-spacing: .02em;
+  }
+  .end-box p { margin: 0; font: 500 max(12px, 2cqw) var(--font-mono); color: var(--fg); }
+  .retry {
+    margin-top: 1cqw; font: 400 4cqw "Kaushan Script", "Brush Script MT", cursive; font-style: italic; color: #fff; cursor: pointer;
+    background: linear-gradient(#f23a3f, #c4121f); border: .5cqw solid #7d0d14; padding: .8cqw 5cqw 1.2cqw;
+    border-radius: 1.2cqw; text-shadow: 0 .3cqw 0 rgba(0,0,0,.35);
+  }
+  .retry:hover { filter: brightness(1.12); }
+
+  .hint { font: 400 12px var(--font-mono); color: var(--muted); text-align: center; }
+  @media (pointer: coarse) { .hint { display: none; } }
+
+  .pad { display: none; width: min(100%, 520px); justify-content: space-between; gap: 12px; touch-action: none; }
+  @media (pointer: coarse) { .pad { display: flex; } }
+  .pad .grp { display: flex; gap: 12px; }
+  .pad button {
+    width: 68px; height: 68px; border-radius: 50%; border: 3px solid #e9efff;
+    background: rgba(8, 14, 36, .85); color: #fff; font: 400 26px var(--font-display);
+    display: grid; place-items: center; touch-action: none; user-select: none; -webkit-user-select: none; padding: 0;
+  }
+  .pad button:active { background: #2b3d7a; }
+  .pad .b { font-size: 22px; }
+</style>
+
+<header>
+  <h1>Super Wassel</h1>
+  <div class="tools">
+    <button id="pauseBtn" type="button">Pause</button>
+    <button id="muteBtn" type="button">Son : on</button>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <canvas id="game" aria-label="Super Wassel, jeu de plateforme"></canvas>
+  <button class="play-hit" id="playBtn" type="button" aria-label="Jouer"></button>
+  <div id="end" hidden>
+    <div class="end-box">
+      <h2 id="endTitle">Game over</h2>
+      <p id="endText"></p>
+      <button class="retry" id="retryBtn" type="button">Rejouer</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint">← → ou A D : bouger · Espace ou ↑ : sauter · Shift ou X : courir et tirer · P : pause · M : son</div>
+
+<div class="pad" id="pad">
+  <div class="grp">
+    <button type="button" data-k="left" aria-label="Gauche">◀</button>
+    <button type="button" data-k="right" aria-label="Droite">▶</button>
+  </div>
+  <div class="grp">
+    <button type="button" class="b" data-k="run" aria-label="Courir et tirer">B</button>
+    <button type="button" data-k="jump" aria-label="Sauter">▲</button>
+  </div>
+</div>
+
+<script src="audio.js"></script>
+<script src="art.js"></script>
+<script src="title.js"></script>
+<script src="game.js"></script>
+
+</body></html>
