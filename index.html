@@ -159,6 +159,18 @@
     .play-hit::after, .end-box, .retry { animation: none; }
     * { transition: none !important; }
   }
+  .online-stats {
+     display:flex; align-items:center; gap:8px;
+     font:500 11px var(--font-mono); color:var(--fg);
+     background:rgba(16,34,76,.8); border:1px solid #34457d;
+     border-radius:999px; padding:6px 10px; white-space:nowrap;
+   }
+   .online-stats .online-dot {
+     width:7px; height:7px; border-radius:50%;
+     background:#39e58c; box-shadow:0 0 8px rgba(57,229,140,.65);
+     display:inline-block;
+   }
+   .online-stats b { color:var(--gold); font-weight:500; }
 </style>
 </head>
 <body>
@@ -173,6 +185,10 @@
     <button id="muteBtn" type="button">Son : on</button>
     <label class="vol" title="Volume">🔊 <input id="volRange" type="range" min="0" max="100" value="90" aria-label="Volume"></label>
     <button id="fsBtn" type="button" title="Plein écran">⛶</button>
+	 <div class="online-stats" id="onlineStats" title="Présence en temps réel">
+     <span class="online-dot"></span>
+     En ligne <b id="onlineCount">0</b> · 🎮 <b id="playingCount">0</b>
+   </div>
   </div>
 </header>
 
@@ -208,6 +224,8 @@
 <script src="art.js"></script>
 <script src="title.js"></script>
 <script src="game.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="online.js"></script>
 <script>
 (function () {
   // Volume persistant + plein écran (surcouche, ne touche pas au moteur)
