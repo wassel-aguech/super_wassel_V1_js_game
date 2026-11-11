@@ -17,6 +17,8 @@
       master.connect(comp); comp.connect(AC.destination);
       musicBus = AC.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
       sfxBus = AC.createGain(); sfxBus.gain.value = 1; sfxBus.connect(master);
+      var dl = AC.createDelay(1); dl.delayTime.value = 0.23; var fb = AC.createGain(); fb.gain.value = 0.28; var wet = AC.createGain(); wet.gain.value = 0.22;
+      musicBus.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(master);
       var len = AC.sampleRate, b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       noiseBuf = b;
@@ -168,7 +170,7 @@
   // accords : [fondamentale, tierce, quinte] (notes MIDI)
   var THEMES = {
     day: {
-      bpm: 134, bars: 4, leadType: 'square', leadVol: 0.05, bassVol: 0.16, arpVol: 0.028, doubled: false,
+      bpm: 134, bars: 8, leadType: 'square', leadVol: 0.05, bassVol: 0.16, arpVol: 0.028, doubled: false,
       chords: [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]],
       lead: [
         72, 0, 76, 0, 79, 0, 76, 0, 74, 0, 72, 0, 67, 0, 0, 0,
@@ -182,7 +184,7 @@
       hat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1]
     },
     night: {
-      bpm: 104, bars: 4, leadType: 'triangle', leadVol: 0.1, bassVol: 0.15, arpVol: 0.03, doubled: true,
+      bpm: 104, bars: 8, leadType: 'triangle', leadVol: 0.1, bassVol: 0.15, arpVol: 0.03, doubled: true,
       chords: [[45, 48, 52], [41, 45, 48], [48, 52, 55], [40, 44, 47]],
       lead: [
         69, 0, 0, 72, 0, 0, 76, 0, 0, 0, 74, 0, 72, 0, 0, 0,
@@ -196,7 +198,7 @@
       hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
     },
     dusk: {
-      bpm: 152, bars: 4, leadType: 'square', leadVol: 0.048, bassVol: 0.16, arpVol: 0.03, doubled: false,
+      bpm: 152, bars: 8, leadType: 'square', leadVol: 0.048, bassVol: 0.16, arpVol: 0.03, doubled: false,
       chords: [[50, 53, 57], [46, 50, 53], [53, 57, 60], [48, 52, 55]],
       lead: [
         74, 0, 77, 0, 81, 0, 77, 0, 74, 77, 81, 0, 86, 0, 0, 0,
@@ -212,28 +214,27 @@
   };
 
   function playStep(i, t) {
-    var d = theme, total = d.bars * 16, n = i % total, bar = (n / 16) | 0, s = n % 16;
-    var sd = 60 / (d.bpm * tempo) / 4, ch = d.chords[bar];
-    var note = d.lead[n];
+    var d = theme, total = d.bars * 16, n = i % total, bar = (n / 16) | 0, s = n % 16, sec = bar >= 4 ? 1 : 0;
+    var ln = n % 64, sd = 60 / (d.bpm * tempo) / 4, ch = d.chords[bar % 4];
+    var note = d.lead[ln];
     if (note) {
       var len = 1;
-      while (len < 4 && n + len < total && !d.lead[n + len]) len++;
+      while (len < 4 && ln + len < 64 && !d.lead[ln + len]) len++;
       osc(d.leadType, mtof(note), mtof(note), t, sd * len * 0.92, d.leadVol, musicBus, 0.006);
-      if (d.doubled || starMode) osc('triangle', mtof(note + (starMode ? 12 : -12)), mtof(note + (starMode ? 12 : -12)), t, sd * len * 0.92, d.leadVol * 0.8, musicBus, 0.006);
+      if (d.doubled || starMode || sec) osc(sec ? 'sawtooth' : 'triangle', mtof(note + (starMode ? 12 : -12)), mtof(note + (starMode ? 12 : -12)), t, sd * len * 0.92, d.leadVol * (sec ? 0.45 : 0.8), musicBus, 0.006);
     }
+    if (s === 0) { for (var k = 0; k < 3; k++) osc('triangle', mtof(ch[k] + 12), mtof(ch[k] + 12), t, sd * 15, 0.02, musicBus, 0.15); }
     var bp = d.bass[s];
-    if (bp) {
-      var bn = bp === 'r' ? ch[0] : bp === 'f' ? ch[0] + 7 : ch[0] + 12;
+    if (bp || (sec && s % 4 === 2)) {
+      var bn = (bp === 'f' ? ch[0] + 7 : bp === 'o' ? ch[0] + 12 : ch[0]);
       osc('triangle', mtof(bn), mtof(bn), t, sd * 1.9, d.bassVol, musicBus, 0.004);
     }
-    var ap = d.arp[s];
-    if (ap) {
-      var an = ch[(ap - 1) % 3] + 12;
-      osc('square', mtof(an), mtof(an), t, sd * 1.4, d.arpVol, musicBus, 0.004);
-    }
-    if (d.kick[s]) { osc('sine', 160, 42, t, 0.13, 0.5, musicBus, 0.002); }
-    if (d.snare[s]) { noise(t, 0.12, 0.17, musicBus, 'highpass', 1800, 2500); osc('triangle', 200, 120, t, 0.07, 0.1, musicBus, 0.002); }
-    if (d.hat[s]) { noise(t, 0.03, (s % 4 === 2 ? 0.11 : 0.07), musicBus, 'highpass', 7500, 9000); }
+    var ap = sec ? (s % 3) + 1 : d.arp[s];
+    if (ap) { var an = ch[(ap - 1) % 3] + 12; osc('square', mtof(an), mtof(an), t, sd * 1.2, d.arpVol * (sec ? 0.8 : 1), musicBus, 0.004); }
+    if (d.kick[s] || (sec && s % 8 === 0)) osc('sine', 160, 42, t, 0.13, 0.5, musicBus, 0.002);
+    var fill = bar === 7 && s >= 12;
+    if (d.snare[s] || fill) { noise(t, 0.12, 0.17, musicBus, 'highpass', 1800, 2500); osc('triangle', 200, 120, t, 0.07, 0.1, musicBus, 0.002); }
+    if (d.hat[s] || sec) noise(t, 0.03, (s % 4 === 2 ? 0.11 : 0.06), musicBus, 'highpass', 7500, 9000);
     if (starMode && s % 2 === 0) noise(t, 0.025, 0.06, musicBus, 'highpass', 9000, 9500);
   }
   function tick() {
