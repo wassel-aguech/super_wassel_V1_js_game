@@ -298,9 +298,9 @@ function syncTouchControls() {
     else if (code === 'Digit3' && G.coins >= price) { G.coins -= price; P.energyMax = Math.min(160, P.energyMax + 20); P.energy = P.energyMax; SFX.power(); }
     else if (code === 'Enter' || code === 'Space') { loadLevel(G.nextLevel, P.power); startIntro(); }
   }
-  function startGame() {
+  function startGame(startLevel) {
     G.lives = 3; G.score = 0; G.coins = 0;
-    loadLevel(0, 0);
+    loadLevel(typeof startLevel === 'number' ? startLevel : 0, 0);
     playBtn.hidden = true; endEl.hidden = true; pauseBtn.textContent = 'Pause';
     startIntro();
 	setOnlinePlaying(true);
@@ -961,7 +961,13 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
   window.addEventListener('resize', resize);
   resize();
   loadLevel(0, 1);
-  G.state = 'title';
+  var directLevel = -1;
+  try {
+    var requestedLevel = parseInt(new URLSearchParams(window.location.search).get('level'), 10);
+    if (requestedLevel >= 1 && requestedLevel <= LEVELS.length) directLevel = requestedLevel - 1;
+  } catch (e) {}
+  if (directLevel >= 0) startGame(directLevel);
+  else G.state = 'title';
   last = performance.now();
   requestAnimationFrame(frame);
 
