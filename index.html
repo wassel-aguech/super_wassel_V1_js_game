@@ -165,6 +165,59 @@
     .play-hit::after, .end-box, .retry { animation: none; }
     * { transition: none !important; }
   }
+  @media (pointer: coarse) and (orientation: portrait) {
+   body {
+     background: #0c1733;
+     overflow-x: hidden;
+     overflow-y: auto;
+     align-items: stretch;
+   }
+   header, .stage {
+     width: 100%;
+   }
+   header {
+     align-items: flex-start;
+   }
+   .brand {
+     min-width: 0;
+   }
+   h1 {
+     font-size: clamp(18px, 5vw, 24px);
+   }
+   h1 small {
+     letter-spacing: .08em;
+   }
+   .tools {
+     width: 100%;
+     justify-content: center;
+   }
+   .online-stats {
+     order: 5;
+   }
+   .stage {
+     max-width: 800px;
+   }
+   .pad {
+     display: grid;
+     grid-template-columns: 1fr;
+     justify-items: center;
+     width: 100%;
+     gap: 10px;
+   }
+   .pad .grp {
+     justify-content: center;
+     gap: 10px;
+   }
+   .pad .grp:last-child {
+     display: grid;
+     grid-template-columns: repeat(3, 68px);
+     gap: 10px;
+   }
+   footer {
+     text-align: center;
+     line-height: 1.6;
+   }
+  }
   .online-stats {
      display:flex; align-items:center; gap:8px;
      font:500 11px var(--font-mono); color:var(--fg);
