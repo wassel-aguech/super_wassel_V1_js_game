@@ -3,7 +3,7 @@
   'use strict';
   var W = window.WASSEL, AU = W.audio, ART = W.art, SFX = AU.sfx;
   var T = 32, VW = 800, VH = 448, ROWS = 14, STEP = 1 / 60, PI = Math.PI, TAU = PI * 2;
-  var SOLID = 'GB?MWHTV1Upqlr';
+  var SOLID = 'GB?MWHTV1INDGAUpqlr';
   function $(id) { return document.getElementById(id); }
    function setOnlinePlaying(value) {
      try {
@@ -29,6 +29,7 @@
   var jumpBuf = 0, fireReq = false, dashReq = false;
   var JUMP_KEYS = { Space: 1, ArrowUp: 1, KeyW: 1 }, RUN_KEYS = { ShiftLeft: 1, ShiftRight: 1, KeyZ: 1, KeyX: 1 };
   var DASH_KEYS = { KeyC: 1, ControlLeft: 1, ControlRight: 1 };
+  var WEAPON_KEYS = { Digit1: 'pistol', Digit2: 'smg', Digit3: 'spread', Digit4: 'grenade' };
   function isLeft() { return keys.ArrowLeft || keys.KeyA || touch.left; }
   function isRight() { return keys.ArrowRight || keys.KeyD || touch.right; }
   function isJump() { return keys.Space || keys.ArrowUp || keys.KeyW || touch.jump; }
@@ -42,6 +43,7 @@
       if (JUMP_KEYS[c]) jumpBuf = 0.12;
       if (RUN_KEYS[c]) fireReq = true;
       if (DASH_KEYS[c]) dashReq = true;
+      if (WEAPON_KEYS[c] && P) P.weapon = WEAPON_KEYS[c];
       if (c === 'KeyP' || c === 'Escape') togglePause();
       if (c === 'KeyM') toggleMute();
       if ((c === 'Enter' || c === 'Space') && (G.state === 'title' || G.state === 'over' || G.state === 'win')) startGame();
@@ -114,7 +116,7 @@
     b.pipe(31, 2).pipe(41, 3).pipe(49, 4);
     b.enemy('slime', 24, 11).enemy('slime', 36, 11).enemy('slime', 45, 11);
     b.coins(54, 9, 3);
-    b.row(60, 67, 8, 'B').put(63, 8, '?').put(62, 4, '?').put(64, 4, 'M').put(66, 4, 'B').put(68, 8, 'H');
+    b.row(60, 67, 8, 'B').put(63, 8, '?').put(62, 4, '?').put(64, 4, 'M').put(66, 4, 'B').put(68, 8, 'H').put(69, 8, 'N');
     b.enemy('shellbug', 70, 11).enemy('shooter', 74, 11).enemy('drone-gunner', 78, 7).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 94, 7).enemy('chaser', 77, 11);
     b.coins(72, 9, 5);
     b.pipe(82, 2).pipe(87, 3);
@@ -131,7 +133,7 @@
     var b = new Builder(154);
     b.ground(0, 154).cut(30, 34).cut(62, 66).cut(92, 97).cut(112, 116);
     for (var x = 8; x < 140; x++) { b.put(x, 0, 'S').put(x, 1, 'S'); }
-    b.put(12, 8, '?').put(13, 8, 'B').put(14, 8, 'M').put(15, 8, 'B').put(16, 8, 'T');
+    b.put(12, 8, '?').put(13, 8, 'B').put(14, 8, 'M').put(15, 8, 'B').put(16, 8, 'T').put(17, 8, 'I');
     b.enemy('slime', 19, 11).enemy('shellbug', 23, 11).enemy('shooter', 26, 11);
     b.coins(30, 8, 4);
     b.pipe(38, 3).enemy('slime', 41, 11).enemy('slime', 43, 11).pipe(47, 2);
@@ -173,8 +175,8 @@
     b.platform(52, 58, 8).platform(106, 112, 8).platform(132, 138, 8).platform(184, 190, 8);
     // blocs : peu de recompenses, bien places
     b.put(12, 8, '?').put(14, 8, 'B').put(15, 8, 'M').put(16, 8, 'B').put(17, 8, '1');
-    b.put(54, 8, '?').put(56, 8, 'W').put(58, 8, 'H').put(108, 8, 'M').put(110, 8, '?').put(112, 8, 'T');
-    b.put(134, 8, '?').put(136, 8, 'M').put(186, 8, '?').put(188, 8, 'B');
+    b.put(54, 8, '?').put(56, 8, 'W').put(58, 8, 'H').put(108, 8, 'M').put(110, 8, '?').put(112, 8, 'T').put(114, 8, 'D').put(116, 8, 'A');
+    b.put(134, 8, '?').put(136, 8, 'M').put(138, 8, 'G').put(186, 8, '?').put(188, 8, 'B');
     b.row(60, 64, 6, 'B').put(62, 6, '?');
     b.row(160, 164, 6, 'B').put(162, 6, 'M');
     // pieces : guident les sauts
@@ -208,7 +210,7 @@
 
   function makePlayer(tx, ty, power) {
     P = { x: 0, y: 0, w: 16, h: 30, normalH: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, shield: 0, speedT: 0, slowT: 0, inv: 0, star: 0, coyote: 0, jumps: 0, wallDir: 0, slide: false, dashCd: 0, dashT: 0, anim: 0,
-      combo: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
+      weapon: 'pistol', ammo: { pistol: 30, smg: 0, spread: 0, grenade: 0 }, fireCd: 0, combo: 0, comboT: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
     setPower(power || 0);
     P.x = tx * T + (T - P.w) / 2;
     P.y = (ty + 1) * T - P.h;
@@ -219,12 +221,14 @@
     P.x += (ow - P.w) / 2; P.y -= (P.h - oh);
   }
   function loadLevel(i, power) {
+    var loadout = P ? { weapon: P.weapon, ammo: { pistol: P.ammo.pistol, smg: P.ammo.smg, spread: P.ammo.spread, grenade: P.ammo.grenade } } : null;
     L = LEVELS[i]();
     G.level = i; G.time = L.time; G.timeAcc = 0; G.camX = 0; G.flagY = 3 * T + 8; G.castleFlag = 0; G.fwT = 0; G.hurry = false; G.shake = 0; G.flash = 0;
     AU.hurry(false); AU.setStar(false);
     enemies = []; items = []; fireballs = []; enemyShots = []; parts = []; pops = []; bumps = {};
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
+    if (loadout) { P.weapon = loadout.weapon; P.ammo = loadout.ammo; }
     jumpBuf = 0; fireReq = false; dashReq = false;
   }
   function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
@@ -321,6 +325,13 @@
   }
   function ring(x, y, color, r) { part({ type: 'ring', x: x, y: y, vx: 0, vy: 0, ttl: 0.4, size: r || 26, color: color || '#fff' }); }
   function addScore(n, x, y) { G.score += n; pops.push({ x: x, y: y, txt: String(n), t: 0 }); }
+  function registerCombo(base, x, y) {
+    P.combo = P.comboT > 0 ? Math.min(9, P.combo + 1) : 1;
+    P.comboT = 2.2;
+    var total = base * P.combo;
+    addScore(total, x, y);
+    if (P.combo > 1) pops.push({ x: x, y: y - 18, txt: 'COMBO x' + P.combo, t: 0 });
+  }
   function addCoin() {
     G.coins++; G.score += 100; SFX.coin();
     if (G.coins >= 100) { G.coins -= 100; G.lives++; SFX.oneup(); pops.push({ x: P.x, y: P.y - 10, txt: '1UP', t: 0 }); }
@@ -341,8 +352,8 @@
       sparkle(px + 16, py, 6, '#ffe066');
     } else if (c === 'M') {
       L.g[ty][tx] = 'U'; bumps[ty * 1000 + tx] = 0.2; spawnItem(P.power === 0 ? 'cap' : 'fire', tx, ty); SFX.bump();
-    } else if (c === 'W' || c === 'H' || c === 'V' || c === 'T' || c === '1') {
-      var itemType = c === 'W' ? 'crown' : c === 'H' ? 'shield' : c === 'V' ? 'speed' : c === 'T' ? 'slow' : 'life';
+    } else if (c === 'W' || c === 'H' || c === 'V' || c === 'T' || c === '1' || c === 'I' || c === 'N' || c === 'D' || c === 'G' || c === 'A') {
+      var itemType = c === 'W' ? 'crown' : c === 'H' ? 'shield' : c === 'V' ? 'speed' : c === 'T' ? 'slow' : c === '1' ? 'life' : c === 'I' ? 'weapon-pistol' : c === 'N' ? 'weapon-smg' : c === 'D' ? 'weapon-spread' : c === 'G' ? 'weapon-grenade' : 'ammo';
       L.g[ty][tx] = 'U'; bumps[ty * 1000 + tx] = 0.2; spawnItem(itemType, tx, ty); SFX.bump();
     } else if (c === 'B') {
       if (P.power > 0) {
@@ -366,7 +377,7 @@
       if (it.emerge < 1) {
         it.emerge = Math.min(1, it.emerge + dt / 0.4); it.y = it.y0 + (it.y1 - it.y0) * it.emerge;
         if (it.emerge >= 1) {
-          if (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life') it.vx = 70;
+          if (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life' || it.t.indexOf('weapon-') === 0 || it.t === 'ammo') it.vx = 70;
           if (it.t === 'crown') { it.vx = 80; it.vy = -380; }
         }
         continue;
@@ -374,7 +385,7 @@
       if (it.t !== 'fire') {
         it.vy = Math.min(it.vy + 1800 * dt, 700); moveX(it, dt);
         if (it.hitX) it.dir = -it.dir;
-        it.vx = (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life' ? 70 : 85) * it.dir; moveY(it, dt);
+        it.vx = (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life' || it.t.indexOf('weapon-') === 0 || it.t === 'ammo' ? 70 : 85) * it.dir; moveY(it, dt);
         if (it.t === 'crown' && it.ground) it.vy = -420;
         if (it.y > VH + 60) { items.splice(i, 1); continue; }
       }
@@ -387,6 +398,8 @@
         else if (it.t === 'speed') { P.speedT = 8; SFX.power(); }
         else if (it.t === 'slow') { P.slowT = 8; SFX.power(); }
         else if (it.t === 'life') { G.lives++; SFX.oneup(); }
+        else if (it.t.indexOf('weapon-') === 0) { P.weapon = it.t.slice(7); P.ammo[P.weapon] = Math.max(P.ammo[P.weapon], P.weapon === 'pistol' ? 30 : P.weapon === 'smg' ? 45 : P.weapon === 'spread' ? 18 : 8); SFX.power(); }
+        else if (it.t === 'ammo') { P.ammo.pistol += 12; P.ammo.smg += 20; P.ammo.spread += 8; P.ammo.grenade += 3; SFX.power(); }
         else { P.star = 10; SFX.star(); AU.setStar(true); }
       }
     }
@@ -419,7 +432,7 @@
     sparkle(e.x + e.w / 2, e.y + e.h / 2, 5, '#ffe066');
     if (e.hp <= 0) {
       e.state = 'dead'; e.timer = 0.45; e.vx = 0; e.vy = 0;
-      addScore(250, e.x, e.y - 10); SFX.stomp(); explosionBurst(e.x + e.w / 2, e.y + e.h / 2, '#ff5a64');
+      SFX.stomp(); explosionBurst(e.x + e.w / 2, e.y + e.h / 2, '#ff5a64');
     } else {
       e.vx = (dirx || -e.dir || 1) * 120; e.vy = -120;
       G.freeze = Math.max(G.freeze, 0.05); G.shake = Math.max(G.shake, 2);
@@ -489,7 +502,7 @@
         if (e.t === 'slime' || e.t === 'shooter' || e.t === 'chaser' || isFlyingEnemy(e)) damageEnemy(e, e.hp, P.face);
         else if (e.state === 'walk') { e.state = 'shell'; e.shellV = 0; e.vx = 0; e.y += e.h - 20; e.h = 20; e.kick = 0.25; }
         else { e.shellV = 0; e.vx = 0; e.kick = 0.25; }
-        addScore([100, 200, 400, 800, 1000, 2000][Math.min(P.combo, 5)], e.x, e.y - 12); P.combo++;
+        if (e.state === 'dead') registerCombo(100, e.x, e.y - 12); else addScore(50, e.x, e.y - 12);
         P.vy = isJump() ? -620 : -400; P.y = Math.min(P.y, e.y - P.h - 1); P.sq = 0.16;
         SFX.stomp(); starBurst(e.x + e.w / 2, e.y, 6); dust(e.x + e.w / 2, e.y + e.h, 4);
         G.freeze = Math.max(G.freeze, 0.05); G.shake = Math.max(G.shake, 3);
@@ -502,19 +515,28 @@
   function updateFireballs(dt) {
     for (var i = fireballs.length - 1; i >= 0; i--) {
       var f = fireballs[i];
-      f.vy = Math.min(f.vy + 1500 * dt, 600); moveX(f, dt);
-      var dead = f.hitX; moveY(f, dt);
-      if (f.ground) f.vy = -320;
+      if (f.gravity) f.vy = Math.min(f.vy + 900 * dt, 600);
+      f.x += f.vx * dt; f.y += f.vy * dt;
+      var dead = solidAt(Math.floor((f.x + f.w / 2) / T), Math.floor((f.y + f.h / 2) / T));
       if (f.head) dead = true;
       if (f.y > VH + 40 || f.x < G.camX - 40 || f.x > G.camX + VW + 40) dead = true;
-      part({ type: 'spark', x: f.x + 6, y: f.y + 6, vx: -f.dir * 20, vy: (Math.random() - 0.5) * 30, ttl: 0.25, color: '#ff9d2e', size: 3 });
+      part({ type: 'spark', x: f.x + 5, y: f.y + 5, vx: -f.dir * 20, vy: (Math.random() - 0.5) * 30, ttl: 0.25, color: f.color, size: 2 });
       if (!dead) for (var j = 0; j < enemies.length; j++) {
         var e = enemies[j];
         if (e.state === 'dead' || e.state === 'fall' || !e.act) continue;
-        if (hit(f, e)) { damageEnemy(e, 1, f.dir); dead = true; break; }
+        if (hit(f, e)) { damageEnemy(e, 1, f.dir); if (e.state === 'dead') registerCombo(250, e.x, e.y - 10); dead = true; break; }
       }
-      if (dead) { explosionBurst(f.x + 6, f.y + 6, '#ff9d2e'); SFX.fireHit(); fireballs.splice(i, 1); }
-      else f.vx = f.dir * 420;
+      if (dead) {
+        if (f.kind === 'grenade') {
+          explosionBurst(f.x + 5, f.y + 5, f.color);
+          enemies.forEach(function (e) {
+            if (e.state === 'dead' || e.state === 'fall' || !e.act) return;
+            var dx = e.x + e.w / 2 - (f.x + 5), dy = e.y + e.h / 2 - (f.y + 5);
+            if (Math.sqrt(dx * dx + dy * dy) <= f.radius) { damageEnemy(e, 1, f.dir); if (e.state === 'dead') registerCombo(300, e.x, e.y - 10); }
+          });
+        } else sparkle(f.x + 5, f.y + 5, 4, f.color);
+        SFX.fireHit(); fireballs.splice(i, 1);
+      }
     }
   }
   function updateEnemyShots(dt) {
@@ -525,6 +547,33 @@
       if (s.ttl <= 0 || solidAt(tx, ty) || s.x < G.camX - 60 || s.x > G.camX + VW + 60 || s.y < -60 || s.y > VH + 60) { enemyShots.splice(i, 1); continue; }
       if (G.state === 'play' && hit(P, s)) { enemyShots.splice(i, 1); hurt(); }
     }
+  }
+
+  // Calcule une direction avec les touches de déplacement et de visée.
+  function aimVector() {
+    var ax = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0);
+    var ay = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+    if (!ax && !ay) ax = P.face;
+    var len = Math.max(1, Math.sqrt(ax * ax + ay * ay));
+    return { x: ax / len, y: ay / len };
+  }
+  function fireWeapon() {
+    var w = P.weapon, ammo = P.ammo[w] || 0;
+    if (ammo <= 0) { P.fireCd = 0.2; return; }
+    var cfg = w === 'smg' ? { count: 1, spread: 0, speed: 500, cooldown: 0.11, color: '#ffe066' } :
+      w === 'spread' ? { count: 5, spread: 0.22, speed: 430, cooldown: 0.42, color: '#ff9bdc' } :
+      w === 'grenade' ? { count: 1, spread: 0, speed: 330, cooldown: 0.75, color: '#7dff9a' } :
+      { count: 1, spread: 0, speed: 560, cooldown: 0.28, color: '#8af0ff' };
+    var a = aimVector(), base = Math.atan2(a.y, a.x);
+    for (var i = 0; i < cfg.count; i++) {
+      var angle = base + (i - (cfg.count - 1) / 2) * cfg.spread;
+      fireballs.push({
+        kind: w, x: P.x + P.w / 2 - 5, y: P.y + P.h * 0.45 - 5, w: 10, h: 10,
+        vx: Math.cos(angle) * cfg.speed, vy: Math.sin(angle) * cfg.speed, dir: Math.cos(angle) >= 0 ? 1 : -1,
+        ttl: w === 'grenade' ? 2.2 : 1.8, gravity: w === 'grenade', radius: w === 'grenade' ? 58 : 0, color: cfg.color
+      });
+    }
+    P.ammo[w]--; P.fireCd = cfg.cooldown; SFX.fire();
   }
 
   /* ----------------------------------------------------------------- joueur */
@@ -546,6 +595,7 @@
   function updatePlayer(dt) {
     var dir = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0);
     P.dashCd = Math.max(0, P.dashCd - dt);
+    P.fireCd = Math.max(0, P.fireCd - dt);
     P.shield = Math.max(0, P.shield - dt);
     P.speedT = Math.max(0, P.speedT - dt);
     P.slowT = Math.max(0, P.slowT - dt);
@@ -583,18 +633,15 @@
     P.wallDir = P.hitX && !P.ground ? wallInput : 0;
     if (P.x < G.camX) { P.x = G.camX; if (P.vx < 0) P.vx = 0; }
     moveY(P, dt);
-    if (P.ground) { P.combo = 0; P.jumps = 0; P.wallDir = 0; }
+    if (P.ground) { P.jumps = 0; P.wallDir = 0; }
     if (P.ground && !wasG && vy0 > 280) { P.sq = -Math.min(0.2, vy0 / 3600); dust(P.x + P.w / 2, P.y + P.h, 6); if (vy0 > 480) SFX.land(); }
     if (P.head) { bumpBlock(P.head.tx, P.head.ty); G.shake = Math.max(G.shake, 1.5); }
     P.dustT -= dt;
     if (P.ground && P.dustT <= 0 && ((Math.abs(P.vx) > 200) || (dir && P.vx * dir < -80))) { dust(P.x + P.w / 2 - P.face * 4, P.y + P.h, 1, -P.face); P.dustT = 0.08; }
-    if (fireReq) {
-      fireReq = false;
-      if (P.power === 2 && fireballs.length < 2) {
-        fireballs.push({ x: P.x + P.w / 2 + P.face * 10 - 6, y: P.y + 16, w: 12, h: 12, vx: P.face * 420, vy: 120, dir: P.face, ground: false, head: null, hitX: false });
-        SFX.fire();
-      }
-    }
+    if ((fireReq || isRun()) && P.fireCd <= 0) fireWeapon();
+    fireReq = false;
+    P.comboT = Math.max(0, P.comboT - dt);
+    if (P.comboT <= 0) P.combo = 0;
     P.anim += Math.abs(P.vx) * dt * 0.055;
     P.sq = approach(P.sq, 0, dt * 1.7);
     if (P.inv > 0) P.inv -= dt;
@@ -718,11 +765,11 @@
     });
     fireballs.forEach(function (f) {
       var cx = f.x + 6, cy = f.y + 6, g = ctx.createRadialGradient(cx, cy, 1, cx, cy, 14);
-      g.addColorStop(0, 'rgba(255,200,80,0.9)'); g.addColorStop(1, 'rgba(255,120,20,0)');
+      g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,120,20,0)');
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.arc(cx, cy, 6.5, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#ffe58a'; ctx.beginPath(); ctx.arc(cx, cy, 3.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = f.color || '#ff7a1a'; ctx.beginPath(); ctx.arc(cx, cy, f.kind === 'grenade' ? 8 : 5.5, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, TAU); ctx.fill();
       ctx.restore();
     });
     enemyShots.forEach(function (s) {
@@ -793,7 +840,7 @@
     var vg = ctx.createRadialGradient(VW / 2, VH / 2, 240, VW / 2, VH / 2, 520);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, L.theme.id === 'night' ? 'rgba(0,0,20,0.4)' : 'rgba(0,10,40,0.22)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
-    ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time }, avatar, G.t);
+    ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time, weapon: P.weapon, ammo: P.ammo[P.weapon] || 0, combo: P.combo }, avatar, G.t);
     if (P.star > 0) ART.outlineText(ctx, 'Couronne ' + Math.ceil(P.star) + 's', VW / 2, 34, 20, 'center', '#ffe066');
     if (P.shield > 0) ART.outlineText(ctx, 'Bouclier ' + Math.ceil(P.shield) + 's', VW / 2, 58, 16, 'center', '#58d6ff');
     else if (P.speedT > 0) ART.outlineText(ctx, 'Vitesse ' + Math.ceil(P.speedT) + 's', VW / 2, 58, 16, 'center', '#ffe066');
