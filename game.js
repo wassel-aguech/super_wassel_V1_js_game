@@ -235,7 +235,8 @@
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
     if (loadout) { P.weapon = loadout.weapon; P.ammo = loadout.ammo; P.energyMax = loadout.energyMax; P.energy = Math.min(P.energyMax, loadout.energy); }
-    BOSS = i < 3 ? makeBoss(i) : null;
+    // Les niveaux se terminent désormais directement au drapeau, sans boss.
+    BOSS = null;
     jumpBuf = 0; fireReq = false; dashReq = false;
   }
   function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
