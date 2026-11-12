@@ -75,6 +75,14 @@
       cloud: '#ffd3a8', cloudSh: '#f09a8c', base: 392,
       grass: '#e8b94b', grassL: '#fbe381', grassD: '#aa7a22', dirtT: '#aa6150', dirtB: '#6e3a42', dirtD: '#4c2733',
       brick: '#dc7450', brickL: '#fba67d', brickD: '#8d3a2b', stone: '#cdb7ca', stoneL: '#f4e5f0', stoneD: '#8c7592', outline: '#2a1020'
+    },
+    factory: {
+      id: 'factory', skyTop: '#101829', skyMid: '#26364c', skyBot: '#718093',
+      far: '#344454', farB: '#526477', farRim: '#8295a8', mid: '#374d52', midB: '#23373b', midRim: '#6f9b91',
+      tree: '#3c5b5c', treeL: '#6c9690', treeD: '#21383b', near: '#55736d', nearB: '#344f4c', nearRim: '#91b6a7',
+      cloud: '#c4d2dc', cloudSh: '#8393a4', base: 392,
+      grass: '#8aa66b', grassL: '#c2d48a', grassD: '#596f4d', dirtT: '#8b7662', dirtB: '#55483e', dirtD: '#382f2a',
+      brick: '#a86645', brickL: '#d69768', brickD: '#623624', stone: '#9aa5a7', stoneL: '#d7e0df', stoneD: '#596466', outline: '#20262b'
     }
   };
 
@@ -1079,6 +1087,13 @@
     outlineText(ctx, 'Score : ' + pad5(h.score), cx, 68, 22, 'right');
     outlineText(ctx, 'Level : ' + h.level, cx, 92, 22, 'right');
     if (h.time != null) outlineText(ctx, 'Temps : ' + h.time, cx, 114, 17, 'right', h.time <= 100 ? '#ffd0d0' : '#ffffff');
+    if (h.energyMax) {
+      var ew = 150, ex = 14, ey = 386, er = Math.max(0, Math.min(1, h.energy / h.energyMax));
+      outlineText(ctx, 'ÉNERGIE ' + Math.round(h.energy) + '/' + h.energyMax, ex, ey - 7, 13, 'left', '#9ff6ff');
+      ctx.fillStyle = 'rgba(5,20,45,0.8)'; ctx.fillRect(ex, ey, ew, 8);
+      ctx.fillStyle = er >= 1 ? '#ffe066' : '#36d9ff'; ctx.fillRect(ex, ey, ew * er, 8);
+      ctx.strokeStyle = '#d5faff'; ctx.lineWidth = 1; ctx.strokeRect(ex, ey, ew, 8);
+    }
     if (h.weapon) {
       var weaponLabel = h.weapon === 'smg' ? 'MITRAILLETTE' : h.weapon === 'spread' ? 'DISPERSION' : h.weapon === 'grenade' ? 'GRENADE' : 'PISTOLET';
       outlineText(ctx, weaponLabel + ' · ' + h.ammo, 14, 414, 16, 'left', '#d5e0ff');

@@ -108,6 +108,18 @@
       osc('sawtooth', 1400, 220, t, 0.16, 0.05);
       noise(t, 0.1, 0.07, sfxBus, 'highpass', 3000, 900);
     },
+    weapon: function (name) {
+      var t = now();
+      if (name === 'smg') { noise(t, 0.045, 0.11, sfxBus, 'highpass', 4200, 1800); osc('square', 760, 420, t, 0.06, 0.05); }
+      else if (name === 'spread') { noise(t, 0.12, 0.13, sfxBus, 'bandpass', 2400, 500); osc('sawtooth', 260, 90, t, 0.1, 0.06); }
+      else if (name === 'grenade') { osc('sine', 180, 70, t, 0.18, 0.13); noise(t, 0.1, 0.08, sfxBus, 'lowpass', 900, 180); }
+      else { osc('square', 1000, 260, t, 0.08, 0.06); }
+    },
+    step: function () { noise(now(), 0.035, 0.035, sfxBus, 'lowpass', 520, 160); },
+    special: function () { arp([60, 67, 72, 79, 84], 0.06, 'triangle', 0.09, now(), 0.12); },
+    bossIntro: function () { osc('sawtooth', 90, 35, now(), 1.1, 0.18); },
+    bossHit: function () { osc('square', 180, 80, now(), 0.12, 0.1); },
+    bossDeath: function () { arp([48, 52, 55, 60, 64, 67], 0.09, 'sawtooth', 0.08, now(), 0.16); },
     fireHit: function () {
       var t = now();
       noise(t, 0.12, 0.1, sfxBus, 'bandpass', 1800, 400);
@@ -212,6 +224,16 @@
       kick: [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
       snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
       hat: [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1]
+    },
+    boss: {
+      bpm: 168, bars: 4, leadType: 'sawtooth', leadVol: 0.08, bassVol: 0.2, arpVol: 0.04, doubled: true,
+      chords: [[36, 39, 43], [34, 38, 41], [31, 35, 38], [29, 33, 36]],
+      lead: [72, 0, 72, 75, 79, 0, 75, 72, 70, 0, 70, 74, 77, 0, 74, 70, 67, 0, 70, 74, 77, 0, 74, 70, 65, 0, 69, 72, 76, 0, 72, 69, 72, 0, 76, 79, 82, 0, 79, 76, 72, 0, 76, 79, 84, 0, 79, 76, 70, 0, 74, 77, 81, 0, 77, 74, 69, 0, 72, 76, 79, 0, 76, 72],
+      bass: ['r', 0, 'f', 0, 'r', 0, 'f', 0, 'r', 0, 'f', 0, 'r', 0, 'f', 0],
+      arp: [0, 1, 2, 1, 0, 2, 1, 3, 0, 1, 2, 1, 0, 2, 1, 3],
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+      snare: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+      hat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     }
   };
 
