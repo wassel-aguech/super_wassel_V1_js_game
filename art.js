@@ -553,9 +553,9 @@
         ctx.strokeStyle = th.outline; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, T - 2, T - 2);
         break;
       }
-      case '?': case 'M': case 'W': case 'H': case 'V': case 'T': case '1': {
+      case '?': case 'M': case 'W': case 'H': case 'V': case 'T': case '1': case 'I': case 'N': case 'D': case 'G': case 'A': {
         // WASSEL GALAXY : capsules d'energie
-        var capCol = c === 'M' ? ['#ff9d2e','#ff5a14','#7a2500'] : c === 'W' ? ['#ff9bdc','#c81f8f','#5a0a3a'] : c === 'H' ? ['#b7f4ff','#2eb9ff','#087ca8'] : c === 'V' ? ['#fff0a0','#ffb52e','#a86a00'] : c === 'T' ? ['#e0c8ff','#a978e8','#5c2c9e'] : c === '1' ? ['#ff9da7','#ff4b62','#8a1f3a'] : ['#8af0ff','#00b6ff','#063a5a'];
+        var capCol = c === 'M' ? ['#ff9d2e','#ff5a14','#7a2500'] : c === 'W' ? ['#ff9bdc','#c81f8f','#5a0a3a'] : c === 'H' ? ['#b7f4ff','#2eb9ff','#087ca8'] : c === 'V' ? ['#fff0a0','#ffb52e','#a86a00'] : c === 'T' ? ['#e0c8ff','#a978e8','#5c2c9e'] : c === '1' ? ['#ff9da7','#ff4b62','#8a1f3a'] : c === 'N' ? ['#fff0a0','#ff9d2e','#7a3d00'] : c === 'D' ? ['#ffb7ef','#e85bd0','#6c1f75'] : c === 'G' ? ['#b7ffca','#39c96b','#075c35'] : c === 'A' ? ['#d5e0ff','#728cff','#243a86'] : ['#8af0ff','#00b6ff','#063a5a'];
         var glow = 0.5 + Math.sin(t*4 + tx*0.7)*0.25;
         ctx.save();
         ctx.shadowColor = capCol[1]; ctx.shadowBlur = 12*glow + 6;
@@ -579,7 +579,7 @@
         // symbole neon
         ctx.save(); ctx.font = 'bold 20px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
-        var sym = c === '?' ? '?' : c === 'M' ? '▲' : c === 'W' ? '★' : c === 'H' ? '◈' : c === 'V' ? '»' : c === 'T' ? '◷' : '+';
+        var sym = c === '?' ? '?' : c === 'M' ? '▲' : c === 'W' ? '★' : c === 'H' ? '◈' : c === 'V' ? '»' : c === 'T' ? '◷' : c === 'I' ? 'P' : c === 'N' ? 'M' : c === 'D' ? 'D' : c === 'G' ? 'G' : c === 'A' ? 'A' : '+';
         ctx.fillStyle = '#fff'; ctx.fillText(sym, px+16, py+17);
         ctx.restore();
         // rivets + voyants
@@ -689,6 +689,19 @@
       ctx.fillStyle = '#ff5a14'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#8a2200'; ctx.stroke();
       circle(ctx, cx, cy + 3, r); ctx.fillStyle = '#ff9d2e'; ctx.fill(); ctx.stroke();
       circle(ctx, cx, cy + 4, r * 0.55); ctx.fillStyle = '#ffe58a'; ctx.fill();
+    } else if (it.t.indexOf('weapon-') === 0 || it.t === 'ammo') {
+      ctx.fillStyle = it.t === 'weapon-grenade' ? '#7dff9a' : it.t === 'weapon-spread' ? '#ff9bdc' : it.t === 'weapon-smg' ? '#ffe066' : '#8af0ff';
+      ctx.strokeStyle = '#0b1026'; ctx.lineWidth = 2;
+      if (it.t === 'ammo') {
+        rrect(ctx, cx - 10, cy - 13, 20, 26, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('A', cx, cy);
+      } else {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.25);
+        rrect(ctx, -10, -4, 17, 8, 2); ctx.fill(); ctx.stroke();
+        ctx.fillRect(4, -2, it.t === 'weapon-spread' ? 12 : 8, 4); ctx.strokeRect(4, -2, it.t === 'weapon-spread' ? 12 : 8, 4);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.t === 'weapon-grenade' ? 'G' : it.t === 'weapon-spread' ? 'D' : it.t === 'weapon-smg' ? 'M' : 'P', -2, 0);
+        ctx.restore();
+      }
     } else if (it.t === 'shield') {
       ctx.strokeStyle = '#58d6ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.9 + Math.sin(t * 8) * 0.1;
       ctx.beginPath(); ctx.arc(cx, cy, 12, 0, TAU); ctx.stroke();
@@ -1051,5 +1064,10 @@
     outlineText(ctx, 'Score : ' + pad5(h.score), cx, 68, 22, 'right');
     outlineText(ctx, 'Level : ' + h.level, cx, 92, 22, 'right');
     if (h.time != null) outlineText(ctx, 'Temps : ' + h.time, cx, 114, 17, 'right', h.time <= 100 ? '#ffd0d0' : '#ffffff');
+    if (h.weapon) {
+      var weaponLabel = h.weapon === 'smg' ? 'MITRAILLETTE' : h.weapon === 'spread' ? 'DISPERSION' : h.weapon === 'grenade' ? 'GRENADE' : 'PISTOLET';
+      outlineText(ctx, weaponLabel + ' · ' + h.ammo, 14, 414, 16, 'left', '#d5e0ff');
+    }
+    if (h.combo > 1) outlineText(ctx, 'COMBO x' + h.combo, VW / 2, 88, 24, 'center', '#ffe066');
   };
 })();
