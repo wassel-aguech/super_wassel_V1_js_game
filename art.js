@@ -553,9 +553,9 @@
         ctx.strokeStyle = th.outline; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, T - 2, T - 2);
         break;
       }
-      case '?': case 'M': case 'W': {
+      case '?': case 'M': case 'W': case 'H': case 'V': case 'T': case '1': {
         // WASSEL GALAXY : capsules d'energie
-        var capCol = c === 'M' ? ['#ff9d2e','#ff5a14','#7a2500'] : c === 'W' ? ['#ff9bdc','#c81f8f','#5a0a3a'] : ['#8af0ff','#00b6ff','#063a5a'];
+        var capCol = c === 'M' ? ['#ff9d2e','#ff5a14','#7a2500'] : c === 'W' ? ['#ff9bdc','#c81f8f','#5a0a3a'] : c === 'H' ? ['#b7f4ff','#2eb9ff','#087ca8'] : c === 'V' ? ['#fff0a0','#ffb52e','#a86a00'] : c === 'T' ? ['#e0c8ff','#a978e8','#5c2c9e'] : c === '1' ? ['#ff9da7','#ff4b62','#8a1f3a'] : ['#8af0ff','#00b6ff','#063a5a'];
         var glow = 0.5 + Math.sin(t*4 + tx*0.7)*0.25;
         ctx.save();
         ctx.shadowColor = capCol[1]; ctx.shadowBlur = 12*glow + 6;
@@ -579,7 +579,7 @@
         // symbole neon
         ctx.save(); ctx.font = 'bold 20px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
-        var sym = c === '?' ? '?' : c === 'M' ? '▲' : '★';
+        var sym = c === '?' ? '?' : c === 'M' ? '▲' : c === 'W' ? '★' : c === 'H' ? '◈' : c === 'V' ? '»' : c === 'T' ? '◷' : '+';
         ctx.fillStyle = '#fff'; ctx.fillText(sym, px+16, py+17);
         ctx.restore();
         // rivets + voyants
@@ -689,6 +689,21 @@
       ctx.fillStyle = '#ff5a14'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#8a2200'; ctx.stroke();
       circle(ctx, cx, cy + 3, r); ctx.fillStyle = '#ff9d2e'; ctx.fill(); ctx.stroke();
       circle(ctx, cx, cy + 4, r * 0.55); ctx.fillStyle = '#ffe58a'; ctx.fill();
+    } else if (it.t === 'shield') {
+      ctx.strokeStyle = '#58d6ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.9 + Math.sin(t * 8) * 0.1;
+      ctx.beginPath(); ctx.arc(cx, cy, 12, 0, TAU); ctx.stroke();
+      ctx.fillStyle = '#b7f4ff'; ctx.beginPath(); ctx.moveTo(cx, cy - 10); ctx.lineTo(cx + 9, cy - 5); ctx.lineTo(cx + 7, cy + 6); ctx.lineTo(cx, cy + 11); ctx.lineTo(cx - 7, cy + 6); ctx.lineTo(cx - 9, cy - 5); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#087ca8'; ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else if (it.t === 'speed' || it.t === 'slow') {
+      ctx.fillStyle = it.t === 'speed' ? '#ffe066' : '#c69cff';
+      ctx.strokeStyle = it.t === 'speed' ? '#a86a00' : '#5c2c9e'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, 12, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 15px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(it.t === 'speed' ? '»' : '⏱', cx, cy + 1);
+    } else if (it.t === 'life') {
+      ctx.fillStyle = '#ff5a64'; ctx.strokeStyle = '#8a1f3a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy + 11); ctx.lineTo(cx - 11, cy); ctx.bezierCurveTo(cx - 16, cy - 8, cx - 5, cy - 14, cx, cy - 6); ctx.bezierCurveTo(cx + 5, cy - 14, cx + 16, cy - 8, cx + 11, cy); ctx.closePath(); ctx.fill(); ctx.stroke();
     } else {
       ctx.beginPath(); ctx.moveTo(cx - 13, cy + 9); ctx.lineTo(cx - 14, cy - 9); ctx.lineTo(cx - 6.5, cy - 1.5); ctx.lineTo(cx, cy - 12); ctx.lineTo(cx + 6.5, cy - 1.5); ctx.lineTo(cx + 14, cy - 9); ctx.lineTo(cx + 13, cy + 9); ctx.closePath();
       ctx.fillStyle = lin(ctx, 0, cy - 12, 0, cy + 9, [0, '#ffe36a', 1, '#f0a812']); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#8a5200'; ctx.stroke();
@@ -720,6 +735,14 @@
     ctx.ellipse(0, e.t.indexOf('drone') === 0 ? 20 : 1, e.t.indexOf('drone') === 0 ? 13 : 11, e.t.indexOf('drone') === 0 ? 3 : 2.5, 0, 0, TAU);
     ctx.fill();
     if (e.state === 'fall') { ctx.translate(0, -e.h / 2); ctx.rotate(t * 8 * (e.vx >= 0 ? 1 : -1)); ctx.translate(0, e.h / 2); }
+    if (e.state === 'dead') {
+      ctx.globalAlpha = Math.max(0, Math.min(1, e.timer / 0.45));
+      ctx.fillStyle = '#39456f'; ctx.beginPath(); ctx.ellipse(0, -4, 17, 5, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#0b1026'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = '#ff5a64'; ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(-3, -2); ctx.moveTo(3, -8); ctx.lineTo(10, -2); ctx.stroke();
+      ctx.restore(); return;
+    }
+    if (e.hitT > 0 && Math.floor(e.hitT * 30) % 2 === 0) ctx.globalAlpha = 0.48;
     ctx.lineJoin = 'round';
     // ---------- ROBO-ROVER ----------
     if (e.t === 'slime') {
