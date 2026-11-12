@@ -656,11 +656,20 @@
   }
 
   /* ------------------------------------------------------------------ boucle */
-  function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2), r = stage.getBoundingClientRect();
-    var w = Math.max(320, Math.round(r.width * dpr));
-    canvas.width = w; canvas.height = Math.round(w * VH / VW);
-  }
+ function resize() {
+  var dpr = Math.min(window.devicePixelRatio || 1, 2), r = stage.getBoundingClientRect();
+  if (!r.width) return;
+  var w = Math.max(320, Math.round(r.width * dpr));
+  if (canvas.width === w) return;
+  canvas.width = w; canvas.height = Math.round(w * VH / VW);
+}
+function resizeSoon() { resize(); setTimeout(resize, 100); setTimeout(resize, 400); }
+window.addEventListener('resize', resizeSoon);
+window.addEventListener('orientationchange', resizeSoon);
+document.addEventListener('fullscreenchange', resizeSoon);
+document.addEventListener('webkitfullscreenchange', resizeSoon);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeSoon);
+if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
   var last = 0, acc = 0;
   function frame(now) {
     var dt = Math.min(0.1, (now - last) / 1000);
