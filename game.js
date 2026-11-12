@@ -204,7 +204,7 @@
   /* ------------------------------------------------------------------- état */
   var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play',
     flagY: 0, flagPts: 0, shake: 0, freeze: 0, flash: 0, castleFlag: 0, fwT: 0, hurry: false, tickN: 0 };
-  var L, P, enemies, items, fireballs, enemyShots, parts, pops, bumps;
+  var L, P, enemies, items, fireballs, enemyShots, parts, pops, bumps, BOSS;
   var best = 0;
   try { best = parseInt(localStorage.getItem('wassel-best') || '0', 10) || 0; } catch (e) {}
 
@@ -229,6 +229,7 @@
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
     if (loadout) { P.weapon = loadout.weapon; P.ammo = loadout.ammo; }
+    BOSS = i < 3 ? makeBoss(i) : null;
     jumpBuf = 0; fireReq = false; dashReq = false;
   }
   function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
@@ -485,7 +486,7 @@
         if (hit(s, o)) knock(o, s.shellV > 0 ? 1 : -1);
       });
     });
-    if (G.state !== 'play') return;
+    if (G.state !== 'play' && G.state !== 'boss') return;
     for (i = 0; i < enemies.length; i++) {
       e = enemies[i];
       if (e.state === 'dead' || e.state === 'fall' || !e.act || !hit(P, e)) continue;
@@ -521,6 +522,9 @@
       if (f.head) dead = true;
       if (f.y > VH + 40 || f.x < G.camX - 40 || f.x > G.camX + VW + 40) dead = true;
       part({ type: 'spark', x: f.x + 5, y: f.y + 5, vx: -f.dir * 20, vy: (Math.random() - 0.5) * 30, ttl: 0.25, color: f.color, size: 2 });
+      if (!dead && BOSS && G.state === 'boss' && BOSS.state === 'active' && hit(f, BOSS)) {
+        damageBoss(f.kind === 'grenade' ? 2 : 1); dead = true;
+      }
       if (!dead) for (var j = 0; j < enemies.length; j++) {
         var e = enemies[j];
         if (e.state === 'dead' || e.state === 'fall' || !e.act) continue;
@@ -529,6 +533,10 @@
       if (dead) {
         if (f.kind === 'grenade') {
           explosionBurst(f.x + 5, f.y + 5, f.color);
+          if (BOSS && G.state === 'boss' && BOSS.state === 'active') {
+            var bdx = BOSS.x + BOSS.w / 2 - (f.x + 5), bdy = BOSS.y + BOSS.h / 2 - (f.y + 5);
+            if (Math.sqrt(bdx * bdx + bdy * bdy) <= f.radius) damageBoss(2);
+          }
           enemies.forEach(function (e) {
             if (e.state === 'dead' || e.state === 'fall' || !e.act) return;
             var dx = e.x + e.w / 2 - (f.x + 5), dy = e.y + e.h / 2 - (f.y + 5);
@@ -545,7 +553,7 @@
       s.ttl -= dt; s.x += s.vx * dt; s.y += s.vy * dt;
       var tx = Math.floor((s.x + s.w / 2) / T), ty = Math.floor((s.y + s.h / 2) / T);
       if (s.ttl <= 0 || solidAt(tx, ty) || s.x < G.camX - 60 || s.x > G.camX + VW + 60 || s.y < -60 || s.y > VH + 60) { enemyShots.splice(i, 1); continue; }
-      if (G.state === 'play' && hit(P, s)) { enemyShots.splice(i, 1); hurt(); }
+      if ((G.state === 'play' || G.state === 'boss') && hit(P, s)) { enemyShots.splice(i, 1); hurt(); }
     }
   }
 
@@ -651,7 +659,9 @@
       if (tx >= 0 && tx < L.w && ty >= 0 && ty < ROWS && L.g[ty][tx] === 'C') { L.g[ty][tx] = ' '; addCoin(); sparkle(tx * T + 16, ty * T + 16, 5); ring(tx * T + 16, ty * T + 16, '#ffe066', 14); }
     }
     var poleX = L.flagX * T + 14;
-    if (P.x + P.w > poleX && P.x < poleX + 4 && P.y < 12 * T) startFlag();
+    if (P.x + P.w > poleX && P.x < poleX + 4 && P.y < 12 * T) {
+      if (G.level < 3 && BOSS) startBossIntro(); else startFlag();
+    }
     if (P.y > VH + 40) die();
   }
   function startFlag() {
@@ -659,6 +669,70 @@
     var ratio = Math.max(0, Math.min(1, (12 * T - (P.y + P.h)) / (9 * T)));
     G.flagPts = Math.max(100, Math.round((100 + 4900 * ratio) / 100) * 100);
     addScore(G.flagPts, P.x, P.y - 10); fireballs = []; enemyShots = []; AU.stop(); AU.setStar(false); P.star = 0; SFX.flag(); sparkle(P.x + P.w, P.y, 10);
+  }
+  function makeBoss(level) {
+    var maxHp = 12 + level * 6;
+    return { level: level, x: (L.flagX - 5) * T, y: 12 * T - 72, w: 70, h: 72, vx: 0, hp: maxHp, maxHp: maxHp, phase: 1, state: 'idle', timer: 0, attackT: 1.4, hitT: 0, chargeT: 0, dir: -1 };
+  }
+  function startBossIntro() {
+    if (!BOSS || G.state !== 'play') return;
+    G.state = 'boss-intro'; G.timer = 2.1; P.vx = 0; P.vy = 0; P.x = Math.min(P.x, BOSS.x - P.w - 24);
+    fireballs = []; enemyShots = []; AU.stop(); G.shake = 3; G.flash = 0.1;
+  }
+  function bossShot(angle, speed) {
+    enemyShots.push({ x: BOSS.x + BOSS.w / 2 - 5, y: BOSS.y + 26, w: 10, h: 10, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, ttl: 3 });
+  }
+  function damageBoss(amount) {
+    if (!BOSS || BOSS.state !== 'active') return;
+    BOSS.hp = Math.max(0, BOSS.hp - amount); BOSS.hitT = 0.18; G.freeze = Math.max(G.freeze, 0.03); G.shake = Math.max(G.shake, 2);
+    sparkle(BOSS.x + BOSS.w / 2, BOSS.y + BOSS.h / 2, 5, '#ffe066');
+    if (BOSS.hp <= 0) {
+      BOSS.state = 'dead'; BOSS.timer = 2.2; G.state = 'boss-dead'; G.shake = 9; G.flash = 0.25;
+      explosionBurst(BOSS.x + BOSS.w / 2, BOSS.y + BOSS.h / 2, '#ff5a64');
+    }
+  }
+  function updateBoss(dt) {
+    if (!BOSS) return;
+    if (G.state === 'boss-intro') {
+      G.timer -= dt; BOSS.y = 12 * T - BOSS.h + Math.sin(G.t * 5) * 3;
+      if (G.timer <= 0) { G.state = 'boss'; BOSS.state = 'active'; BOSS.attackT = 0.8; AU.music(L.music); }
+      return;
+    }
+    if (G.state === 'boss-dead') {
+      BOSS.timer -= dt;
+      if (Math.random() < 0.25) explosionBurst(BOSS.x + Math.random() * BOSS.w, BOSS.y + Math.random() * BOSS.h, '#ffb040');
+      if (BOSS.timer <= 0) {
+        if (G.level + 1 >= LEVELS.length) finishRun(true);
+        else { var nextPower = P.power; loadLevel(G.level + 1, nextPower); startIntro(); }
+      }
+      return;
+    }
+    if (G.state !== 'boss' || BOSS.state !== 'active') return;
+    BOSS.hitT = Math.max(0, BOSS.hitT - dt);
+    var ratio = BOSS.hp / BOSS.maxHp;
+    BOSS.phase = ratio > 0.66 ? 1 : ratio > 0.33 ? 2 : 3;
+    BOSS.attackT -= dt;
+    if (BOSS.chargeT > 0) {
+      BOSS.chargeT -= dt; BOSS.x += BOSS.vx * dt;
+      if (BOSS.x < (L.flagX - 8) * T) { BOSS.x = (L.flagX - 8) * T; BOSS.vx = Math.abs(BOSS.vx); }
+      if (BOSS.x > (L.flagX - 2) * T) { BOSS.x = (L.flagX - 2) * T; BOSS.vx = -Math.abs(BOSS.vx); }
+      if (hit(P, BOSS)) hurt();
+    } else if (BOSS.attackT <= 0) {
+      BOSS.attackT = Math.max(0.65, 1.45 - BOSS.level * 0.18 - (BOSS.phase - 1) * 0.18);
+      var target = Math.atan2(P.y + P.h / 2 - (BOSS.y + 25), P.x + P.w / 2 - (BOSS.x + BOSS.w / 2));
+      if (BOSS.phase === 1) {
+        for (var i = -1; i <= 1; i++) bossShot(target + i * 0.18, 240 + BOSS.level * 35);
+      } else if (BOSS.phase === 2) {
+        BOSS.chargeT = 0.65; BOSS.vx = (P.x < BOSS.x ? -1 : 1) * (280 + BOSS.level * 35); G.shake = 4;
+        bossShot(target, 270 + BOSS.level * 35);
+      } else {
+        for (var j = 0; j < 2 + BOSS.level; j++) {
+          var minion = makeEnemy(j % 2 ? 'chaser' : 'drone-gunner', Math.floor(BOSS.x / T) + 1, 7 + (j % 3));
+          minion.x = BOSS.x + j * 18 - 18; minion.y = BOSS.y - 20 - (j % 2) * 18; minion.act = true; enemies.push(minion);
+        }
+        bossShot(target - 0.12, 300); bossShot(target + 0.12, 300);
+      }
+    }
   }
   function updateGoal(dt) {
     if (G.state === 'flag') {
@@ -715,9 +789,9 @@
       if (G.timer <= 0) { if (G.lives > 0) { loadLevel(G.level, 0); startIntro(); } else finishRun(false); }
       return;
     }
-    if (G.state === 'play') {
+    if (G.state === 'play' || G.state === 'boss') {
       updatePlayer(dt);
-      if (G.state === 'play') {
+      if (G.state === 'play' || G.state === 'boss') {
         G.timeAcc += dt * (P.slowT > 0 ? 0.45 : 1);
         if (G.timeAcc >= 1) {
           G.timeAcc -= 1; G.time--;
@@ -725,12 +799,14 @@
           if (G.time <= 0) { G.time = 0; die(); }
         }
       }
-    } else updateGoal(dt);
-    if (G.state === 'play' || G.state === 'flag' || G.state === 'walk') {
-      if (G.state === 'play') {
+    } else if (G.state === 'boss-intro' || G.state === 'boss-dead') updateBoss(dt);
+    else updateGoal(dt);
+    if (G.state === 'play' || G.state === 'boss' || G.state === 'boss-intro' || G.state === 'boss-dead' || G.state === 'flag' || G.state === 'walk') {
+      if (G.state === 'play' || G.state === 'boss') {
         var enemyDt = dt * (P.slowT > 0 ? 0.45 : 1);
         updateEnemies(enemyDt); updateFireballs(dt); updateEnemyShots(enemyDt);
       }
+      if (G.state === 'boss') updateBoss(dt);
       updateItems(dt);
     }
     var target = Math.max(0, Math.min(P.x - 300 + P.vx * 0.12, L.w * T - VW));
@@ -834,6 +910,7 @@
       ART.drawTile(ctx, c, px, py, tx, ty, L.theme, sol, G.t);
     }
     enemies.forEach(function (e) { if (e.x + e.w < G.camX - 40 || e.x > G.camX + VW + 40) return; ART.drawEnemy(ctx, e, G.t); });
+    if (BOSS && (G.state === 'boss-intro' || G.state === 'boss' || G.state === 'boss-dead')) ART.drawBoss(ctx, BOSS, G.t);
     drawPlayer();
     drawParticles();
     ctx.restore();
@@ -845,8 +922,18 @@
     if (P.shield > 0) ART.outlineText(ctx, 'Bouclier ' + Math.ceil(P.shield) + 's', VW / 2, 58, 16, 'center', '#58d6ff');
     else if (P.speedT > 0) ART.outlineText(ctx, 'Vitesse ' + Math.ceil(P.speedT) + 's', VW / 2, 58, 16, 'center', '#ffe066');
     else if (P.slowT > 0) ART.outlineText(ctx, 'Ralenti ' + Math.ceil(P.slowT) + 's', VW / 2, 58, 16, 'center', '#c69cff');
+    if (BOSS && (G.state === 'boss-intro' || G.state === 'boss' || G.state === 'boss-dead')) {
+      var bw = 360, bx = (VW - bw) / 2, by = 12;
+      ctx.fillStyle = 'rgba(8,12,35,0.82)'; ctx.fillRect(bx - 6, by - 5, bw + 12, 24);
+      ctx.fillStyle = '#3a1735'; ctx.fillRect(bx, by, bw, 14);
+      ctx.fillStyle = BOSS.phase === 3 ? '#b44cff' : BOSS.phase === 2 ? '#ff5a64' : '#58d6ff';
+      ctx.fillRect(bx, by, bw * Math.max(0, BOSS.hp / BOSS.maxHp), 14);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, 14);
+      ART.outlineText(ctx, 'BOSS · PHASE ' + BOSS.phase, VW / 2, 48, 17, 'center', '#fff');
+    }
     if (G.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.5, G.flash) + ')'; ctx.fillRect(0, 0, VW, VH); }
     if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !'][G.level] || ''], true);
+    else if (G.state === 'boss-intro') drawCard(['ALERTE BOSS !', 'Prépare-toi au combat'], false);
     else if (G.state === 'pause') drawCard(['Pause', 'Appuie sur P pour reprendre'], false);
   }
 
@@ -884,7 +971,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
   if (window.__WASSEL_TEST) {
     window.__WASSEL_TEST({
       G: G, startGame: startGame, loadLevel: loadLevel, startIntro: startIntro, update: update, render: render,
-      P: function () { return P; }, L: function () { return L; }, enemies: function () { return enemies; }, items: function () { return items; },
+      P: function () { return P; }, L: function () { return L; }, enemies: function () { return enemies; }, boss: function () { return BOSS; }, items: function () { return items; },
       bumpBlock: bumpBlock, setPower: setPower, keys: keys, spawn: function (t, x, y) { enemies.push(makeEnemy(t, x, y)); },
       press: function (c) { keys[c] = true; if (JUMP_KEYS[c]) jumpBuf = 0.12; if (RUN_KEYS[c]) fireReq = true; if (DASH_KEYS[c]) dashReq = true; },
       release: function (c) { keys[c] = false; }, parts: function () { return parts; }
