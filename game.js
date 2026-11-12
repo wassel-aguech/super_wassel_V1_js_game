@@ -25,8 +25,8 @@
   } catch (e) {}
 
   /* ------------------------------------------------------------------ entrées */
-  var keys = {}, touch = { left: false, right: false, jump: false, run: false, slide: false };
-  var jumpBuf = 0, fireReq = false, dashReq = false;
+  var keys = {}, touch = { left: false, right: false, jump: false, run: false, slide: false, special: false };
+  var jumpBuf = 0, fireReq = false, dashReq = false, specialReq = false;
   var JUMP_KEYS = { Space: 1, ArrowUp: 1, KeyW: 1 }, RUN_KEYS = { ShiftLeft: 1, ShiftRight: 1, KeyZ: 1, KeyX: 1 };
   var DASH_KEYS = { KeyC: 1, ControlLeft: 1, ControlRight: 1 };
   var WEAPON_KEYS = { Digit1: 'pistol', Digit2: 'smg', Digit3: 'spread', Digit4: 'grenade' };
@@ -44,6 +44,9 @@
       if (RUN_KEYS[c]) fireReq = true;
       if (DASH_KEYS[c]) dashReq = true;
       if (WEAPON_KEYS[c] && P) P.weapon = WEAPON_KEYS[c];
+      if (c === 'KeyE') specialReq = true;
+      if (G.state === 'dialog' && (c === 'Enter' || c === 'Space')) advanceDialog();
+      if (G.state === 'shop' && (c === 'Digit1' || c === 'Digit2' || c === 'Digit3' || c === 'Enter' || c === 'Space')) shopAction(c);
       if (c === 'KeyP' || c === 'Escape') togglePause();
       if (c === 'KeyM') toggleMute();
       if ((c === 'Enter' || c === 'Space') && (G.state === 'title' || G.state === 'over' || G.state === 'win')) startGame();
@@ -53,7 +56,7 @@
   });
   window.addEventListener('keyup', function (e) { keys[e.code] = false; });
   window.addEventListener('blur', function () {
-    keys = {}; touch.left = touch.right = touch.jump = touch.run = touch.slide = false;
+    keys = {}; touch.left = touch.right = touch.jump = touch.run = touch.slide = touch.special = false;
     if (G.state === 'play') togglePause();
   });
   Array.prototype.forEach.call(pad.querySelectorAll('button[data-k]'), function (btn) {
@@ -63,6 +66,9 @@
       if (k === 'jump') jumpBuf = 0.12;
       if (k === 'run') fireReq = true;
       if (k === 'dash') dashReq = true;
+      if (k === 'special') specialReq = true;
+      if (k === 'continue' && G.state === 'dialog') advanceDialog();
+      if (k === 'continue' && G.state === 'shop') shopAction('Enter');
       try { btn.setPointerCapture(e.pointerId); } catch (err) {}
     });
     function up(e) { e.preventDefault(); touch[k] = false; }
@@ -75,7 +81,7 @@
     muteBtn.textContent = AU.isMuted() ? 'Son : off' : 'Son : on';
   }
   function togglePause() {
-  if (G.state === 'play') { G.prev = 'play'; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true); setOnlinePlaying(false); }
+  if (G.state === 'play' || G.state === 'boss') { G.prev = G.state; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true); setOnlinePlaying(false); }
   else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now(); setOnlinePlaying(true); }
 }
   muteBtn.addEventListener('click', function () { AU.init(); toggleMute(); });
@@ -160,7 +166,7 @@
     b.enemy('slime', 52, 9).enemy('shellbug', 69, 9).enemy('shooter', 76, 9).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 103, 6).enemy('chaser', 120, 9).enemy('drone-gunner', 138, 6).enemy('drone-gunner', 150, 6).enemy('drone-gunner', 162, 7).enemy('slime', 155, 11).enemy('shooter', 158, 11);
     b.stairs(152, 5);
     b.flagX = 162;
-    return b.done('1-3', 'dusk', 330, 'dusk');
+    return b.done('1-3', 'factory', 330, 'dusk');
   }
   function level4() {
     // 1-4 "Crepuscule expert" : sauts longs, tuyaux hauts, carapaces en chaine
@@ -202,7 +208,7 @@
   var LEVELS = [level1, level2, level3, level4];
 
   /* ------------------------------------------------------------------- état */
-  var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play',
+  var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play', nextLevel: 0, dialogLine: 0,
     flagY: 0, flagPts: 0, shake: 0, freeze: 0, flash: 0, castleFlag: 0, fwT: 0, hurry: false, tickN: 0 };
   var L, P, enemies, items, fireballs, enemyShots, parts, pops, bumps, BOSS;
   var best = 0;
@@ -210,7 +216,7 @@
 
   function makePlayer(tx, ty, power) {
     P = { x: 0, y: 0, w: 16, h: 30, normalH: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, shield: 0, speedT: 0, slowT: 0, inv: 0, star: 0, coyote: 0, jumps: 0, wallDir: 0, slide: false, dashCd: 0, dashT: 0, anim: 0,
-      weapon: 'pistol', ammo: { pistol: 30, smg: 0, spread: 0, grenade: 0 }, fireCd: 0, combo: 0, comboT: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
+      weapon: 'pistol', ammo: { pistol: 30, smg: 0, spread: 0, grenade: 0 }, fireCd: 0, energy: 0, energyMax: 100, stepT: 0, combo: 0, comboT: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
     setPower(power || 0);
     P.x = tx * T + (T - P.w) / 2;
     P.y = (ty + 1) * T - P.h;
@@ -221,18 +227,34 @@
     P.x += (ow - P.w) / 2; P.y -= (P.h - oh);
   }
   function loadLevel(i, power) {
-    var loadout = P ? { weapon: P.weapon, ammo: { pistol: P.ammo.pistol, smg: P.ammo.smg, spread: P.ammo.spread, grenade: P.ammo.grenade } } : null;
+    var loadout = P ? { weapon: P.weapon, ammo: { pistol: P.ammo.pistol, smg: P.ammo.smg, spread: P.ammo.spread, grenade: P.ammo.grenade }, energy: P.energy, energyMax: P.energyMax } : null;
     L = LEVELS[i]();
     G.level = i; G.time = L.time; G.timeAcc = 0; G.camX = 0; G.flagY = 3 * T + 8; G.castleFlag = 0; G.fwT = 0; G.hurry = false; G.shake = 0; G.flash = 0;
     AU.hurry(false); AU.setStar(false);
     enemies = []; items = []; fireballs = []; enemyShots = []; parts = []; pops = []; bumps = {};
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
-    if (loadout) { P.weapon = loadout.weapon; P.ammo = loadout.ammo; }
+    if (loadout) { P.weapon = loadout.weapon; P.ammo = loadout.ammo; P.energyMax = loadout.energyMax; P.energy = Math.min(P.energyMax, loadout.energy); }
     BOSS = i < 3 ? makeBoss(i) : null;
     jumpBuf = 0; fireReq = false; dashReq = false;
   }
   function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
+  function beginIntermission(next) {
+    G.nextLevel = next; G.dialogLine = 0; G.state = 'dialog'; AU.stop(); setOnlinePlaying(false);
+  }
+  function advanceDialog() {
+    if (G.state !== 'dialog') return;
+    if (G.dialogLine < 1) { G.dialogLine++; return; }
+    G.state = 'shop'; SFX.power();
+  }
+  function shopAction(code) {
+    if (G.state !== 'shop') return;
+    var price = code === 'Digit1' ? 50 : code === 'Digit2' ? 30 : code === 'Digit3' ? 75 : 0;
+    if (code === 'Digit1' && G.coins >= price) { G.coins -= price; G.lives++; SFX.oneup(); }
+    else if (code === 'Digit2' && G.coins >= price) { G.coins -= price; P.ammo.pistol += 20; P.ammo.smg += 30; P.ammo.spread += 10; P.ammo.grenade += 3; SFX.power(); }
+    else if (code === 'Digit3' && G.coins >= price) { G.coins -= price; P.energyMax = Math.min(160, P.energyMax + 20); P.energy = P.energyMax; SFX.power(); }
+    else if (code === 'Enter' || code === 'Space') { loadLevel(G.nextLevel, P.power); startIntro(); }
+  }
   function startGame() {
     G.lives = 3; G.score = 0; G.coins = 0;
     loadLevel(0, 0);
@@ -329,9 +351,23 @@
   function registerCombo(base, x, y) {
     P.combo = P.comboT > 0 ? Math.min(9, P.combo + 1) : 1;
     P.comboT = 2.2;
+    P.energy = Math.min(P.energyMax, P.energy + 20);
     var total = base * P.combo;
     addScore(total, x, y);
     if (P.combo > 1) pops.push({ x: x, y: y - 18, txt: 'COMBO x' + P.combo, t: 0 });
+  }
+  function activateSpecial() {
+    if (P.energy < P.energyMax || G.state !== 'play' && G.state !== 'boss') return;
+    P.energy = 0; SFX.special(); G.shake = 8; G.flash = 0.18; ring(P.x + P.w / 2, P.y + P.h / 2, '#7af0ff', 90);
+    enemies.forEach(function (e) {
+      if (e.state === 'dead' || e.state === 'fall') return;
+      var dx = e.x + e.w / 2 - (P.x + P.w / 2), dy = e.y + e.h / 2 - (P.y + P.h / 2);
+      if (Math.sqrt(dx * dx + dy * dy) < 150) { damageEnemy(e, e.hp, dx < 0 ? -1 : 1); if (e.state === 'dead') registerCombo(200, e.x, e.y - 10); }
+    });
+    if (BOSS && G.state === 'boss') {
+      var bdx = BOSS.x + BOSS.w / 2 - (P.x + P.w / 2), bdy = BOSS.y + BOSS.h / 2 - (P.y + P.h / 2);
+      if (Math.sqrt(bdx * bdx + bdy * bdy) < 180) damageBoss(3);
+    }
   }
   function addCoin() {
     G.coins++; G.score += 100; SFX.coin();
@@ -581,7 +617,7 @@
         ttl: w === 'grenade' ? 2.2 : 1.8, gravity: w === 'grenade', radius: w === 'grenade' ? 58 : 0, color: cfg.color
       });
     }
-    P.ammo[w]--; P.fireCd = cfg.cooldown; SFX.fire();
+    P.ammo[w]--; P.fireCd = cfg.cooldown; SFX.weapon(w);
   }
 
   /* ----------------------------------------------------------------- joueur */
@@ -602,6 +638,7 @@
   }
   function updatePlayer(dt) {
     var dir = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0);
+    if (specialReq) { specialReq = false; activateSpecial(); }
     P.dashCd = Math.max(0, P.dashCd - dt);
     P.fireCd = Math.max(0, P.fireCd - dt);
     P.shield = Math.max(0, P.shield - dt);
@@ -645,6 +682,8 @@
     if (P.ground && !wasG && vy0 > 280) { P.sq = -Math.min(0.2, vy0 / 3600); dust(P.x + P.w / 2, P.y + P.h, 6); if (vy0 > 480) SFX.land(); }
     if (P.head) { bumpBlock(P.head.tx, P.head.ty); G.shake = Math.max(G.shake, 1.5); }
     P.dustT -= dt;
+    P.stepT -= dt;
+    if (P.ground && Math.abs(P.vx) > 90 && P.stepT <= 0) { SFX.step(); P.stepT = 0.22; }
     if (P.ground && P.dustT <= 0 && ((Math.abs(P.vx) > 200) || (dir && P.vx * dir < -80))) { dust(P.x + P.w / 2 - P.face * 4, P.y + P.h, 1, -P.face); P.dustT = 0.08; }
     if ((fireReq || isRun()) && P.fireCd <= 0) fireWeapon();
     fireReq = false;
@@ -677,25 +716,25 @@
   function startBossIntro() {
     if (!BOSS || G.state !== 'play') return;
     G.state = 'boss-intro'; G.timer = 2.1; P.vx = 0; P.vy = 0; P.x = Math.min(P.x, BOSS.x - P.w - 24);
-    fireballs = []; enemyShots = []; AU.stop(); G.shake = 3; G.flash = 0.1;
+    fireballs = []; enemyShots = []; AU.stop(); SFX.bossIntro(); G.shake = 3; G.flash = 0.1;
   }
   function bossShot(angle, speed) {
     enemyShots.push({ x: BOSS.x + BOSS.w / 2 - 5, y: BOSS.y + 26, w: 10, h: 10, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, ttl: 3 });
   }
   function damageBoss(amount) {
     if (!BOSS || BOSS.state !== 'active') return;
-    BOSS.hp = Math.max(0, BOSS.hp - amount); BOSS.hitT = 0.18; G.freeze = Math.max(G.freeze, 0.03); G.shake = Math.max(G.shake, 2);
+    BOSS.hp = Math.max(0, BOSS.hp - amount); BOSS.hitT = 0.18; SFX.bossHit(); G.freeze = Math.max(G.freeze, 0.03); G.shake = Math.max(G.shake, 2);
     sparkle(BOSS.x + BOSS.w / 2, BOSS.y + BOSS.h / 2, 5, '#ffe066');
     if (BOSS.hp <= 0) {
       BOSS.state = 'dead'; BOSS.timer = 2.2; G.state = 'boss-dead'; G.shake = 9; G.flash = 0.25;
-      explosionBurst(BOSS.x + BOSS.w / 2, BOSS.y + BOSS.h / 2, '#ff5a64');
+      explosionBurst(BOSS.x + BOSS.w / 2, BOSS.y + BOSS.h / 2, '#ff5a64'); SFX.bossDeath();
     }
   }
   function updateBoss(dt) {
     if (!BOSS) return;
     if (G.state === 'boss-intro') {
       G.timer -= dt; BOSS.y = 12 * T - BOSS.h + Math.sin(G.t * 5) * 3;
-      if (G.timer <= 0) { G.state = 'boss'; BOSS.state = 'active'; BOSS.attackT = 0.8; AU.music(L.music); }
+      if (G.timer <= 0) { G.state = 'boss'; BOSS.state = 'active'; BOSS.attackT = 0.8; AU.music('boss'); }
       return;
     }
     if (G.state === 'boss-dead') {
@@ -703,7 +742,7 @@
       if (Math.random() < 0.25) explosionBurst(BOSS.x + Math.random() * BOSS.w, BOSS.y + Math.random() * BOSS.h, '#ffb040');
       if (BOSS.timer <= 0) {
         if (G.level + 1 >= LEVELS.length) finishRun(true);
-        else { var nextPower = P.power; loadLevel(G.level + 1, nextPower); startIntro(); }
+        else beginIntermission(G.level + 1);
       }
       return;
     }
@@ -752,7 +791,7 @@
         G.timer -= dt;
         if (G.timer <= 0) {
           if (G.level + 1 >= LEVELS.length) finishRun(true);
-          else { var pw = P.power; loadLevel(G.level + 1, pw); startIntro(); }
+          else beginIntermission(G.level + 1);
         }
       }
     }
@@ -774,7 +813,7 @@
 
     function update(dt) {
     G.t += dt;
-    if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
+    if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win' || G.state === 'dialog' || G.state === 'shop') {
       if (G.state === 'over' || G.state === 'win') updateParticles(dt);
       return;
     }
@@ -917,7 +956,7 @@
     var vg = ctx.createRadialGradient(VW / 2, VH / 2, 240, VW / 2, VH / 2, 520);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, L.theme.id === 'night' ? 'rgba(0,0,20,0.4)' : 'rgba(0,10,40,0.22)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
-    ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time, weapon: P.weapon, ammo: P.ammo[P.weapon] || 0, combo: P.combo }, avatar, G.t);
+    ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time, weapon: P.weapon, ammo: P.ammo[P.weapon] || 0, combo: P.combo, energy: P.energy, energyMax: P.energyMax }, avatar, G.t);
     if (P.star > 0) ART.outlineText(ctx, 'Couronne ' + Math.ceil(P.star) + 's', VW / 2, 34, 20, 'center', '#ffe066');
     if (P.shield > 0) ART.outlineText(ctx, 'Bouclier ' + Math.ceil(P.shield) + 's', VW / 2, 58, 16, 'center', '#58d6ff');
     else if (P.speedT > 0) ART.outlineText(ctx, 'Vitesse ' + Math.ceil(P.speedT) + 's', VW / 2, 58, 16, 'center', '#ffe066');
@@ -935,6 +974,8 @@
     if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !'][G.level] || ''], true);
     else if (G.state === 'boss-intro') drawCard(['ALERTE BOSS !', 'Prépare-toi au combat'], false);
     else if (G.state === 'pause') drawCard(['Pause', 'Appuie sur P pour reprendre'], false);
+    else if (G.state === 'dialog') drawCard(['Entre les niveaux', ['Le chemin devient plus dangereux…', 'Prépare ton équipement avant de repartir.'][G.dialogLine]], false);
+    else if (G.state === 'shop') drawCard(['BOUTIQUE · ' + G.coins + ' pièces', '1 Vie 50 · 2 Munitions 30 · 3 Énergie +20 75 · Entrée : continuer'], false);
   }
 
   /* ------------------------------------------------------------------ boucle */
