@@ -3,7 +3,7 @@
   'use strict';
   var W = window.WASSEL, AU = W.audio, ART = W.art, SFX = AU.sfx;
   var T = 32, VW = 800, VH = 448, ROWS = 14, STEP = 1 / 60, PI = Math.PI, TAU = PI * 2;
-  var SOLID = 'GB?MWHTV1INDGAUpqlr';
+  var SOLID = 'GB?MWHTV1INDGAUpqlrS';
   function $(id) { return document.getElementById(id); }
    function setOnlinePlaying(value) {
      try {
