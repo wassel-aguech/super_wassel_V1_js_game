@@ -169,27 +169,31 @@
     var HIP = -20.5, TH = 9.5, SH = 9.5, UA = 8.2, FA = 7.8, SY = -19.2;
     var lean = 0, bob = 0, legB, legF, armB, armF, lookY = 0, brow = 0, dead = false, headRot = 0;
     function run(p) { var th = 0.85 * Math.sin(p), bend = 0.2 + 0.95 * Math.max(0, Math.cos(p)); return [th, th - bend]; }
+    var runSpeed = Math.min(1.4, 0.8 + Math.abs(ph % 6) * 0.05);
     switch (pose) {
       case 'run':
         legB = run(ph + PI); legF = run(ph);
         var sw = Math.sin(ph);
-        armB = [0.85 * sw + 0.1, 0.85 * sw + 1.2]; armF = [-0.85 * sw + 0.1, -0.85 * sw + 1.2];
-        bob = -Math.abs(Math.cos(ph)) * 1.7; lean = 0.15; brow = 0.4;
+        armB = [0.95 * sw + 0.15, 0.95 * sw + 1.35]; armF = [-0.95 * sw + 0.15, -0.95 * sw + 1.35];
+        bob = -Math.abs(Math.cos(ph)) * 2.4; lean = 0.22; brow = 0.5;
+        headRot = Math.sin(ph) * 0.03;
         break;
       case 'jump':
-        legB = [-0.55, -1.55]; legF = [1.3, -0.15];
-        armB = [-1.1, -0.85]; armF = [1.3, 2.65];
-        lean = 0.2; lookY = -0.6; brow = 0.5; headRot = -0.08;
+        legB = [-0.7, -1.7]; legF = [1.45, -0.25];
+        armB = [-1.35, -1.0]; armF = [1.45, 2.8];
+        lean = 0.26; lookY = -0.7; brow = 0.6; headRot = -0.12;
+        bob = -1.2;
         break;
       case 'fall':
-        legB = [-0.35, -0.95]; legF = [0.55, 0.15];
-        armB = [-1.5, -2.0]; armF = [1.7, 2.3];
-        lean = 0.05; lookY = 0.3; brow = -0.6;
+        legB = [-0.45, -1.0]; legF = [0.7, 0.3];
+        armB = [-1.7, -2.2]; armF = [1.9, 2.5];
+        lean = 0.08; lookY = 0.4; brow = -0.7;
+        bob = 0.8;
         break;
       case 'skid':
-        legB = [0.45, 0.25]; legF = [0.8, 0.6];
-        armB = [-1.05, -0.5]; armF = [-0.7, -0.2];
-        lean = -0.22; bob = 0.6; brow = 0.8;
+        legB = [0.55, 0.35]; legF = [0.95, 0.7];
+        armB = [-1.2, -0.6]; armF = [-0.85, -0.3];
+        lean = -0.3; bob = 1.0; brow = 1.0; headRot = 0.08;
         break;
       case 'flag':
         legB = [0.35, 0.05]; legF = [0.15, -0.1];
@@ -216,8 +220,10 @@
       return { h: [hx, hy], k: [kx, ky], a: [kx + Math.sin(a[1]) * SH, ky + Math.cos(a[1]) * SH], sa: a[1] };
     }
     function drawLeg(L) {
-      limb(ctx, [L.h, L.k, L.a], 7.6, '#2a2b34', ow);
-      limb(ctx, [[L.h[0] + 1.6, L.h[1] + 1], [L.k[0] + 1.6, L.k[1]]], 2, '#3c3e4c', 0);
+      var pants = power === 2 ? '#3a2a6b' : '#232f5e';
+      var pantsL = power === 2 ? '#ff8a2a' : '#3f5aa8';
+      limb(ctx, [L.h, L.k, L.a], 8.2, pants, ow);
+      limb(ctx, [[L.h[0] + 1.6, L.h[1] + 1], [L.k[0] + 1.6, L.k[1]]], 2.6, pantsL, 0);
       var sa = L.sa, cx = L.a[0] - Math.sin(sa) * 2.7, cy = L.a[1] - Math.cos(sa) * 2.7;
       limb(ctx, [[cx, cy], L.a], 7.9, '#d6d9ec', ow * 0.9);
       ctx.save();
@@ -255,22 +261,55 @@
 
     ctx.save();
     ctx.translate(0, hy); ctx.rotate(lean);
+    // === WASSEL GALAXY : jetpack dorsal ===
+    (function () {
+      var jy = -12, jw = 7;
+      ctx.save();
+      ctx.translate(-11.5, jy);
+      rrect(ctx, -jw, -9, jw * 2, 18, 3.5);
+      ctx.fillStyle = lin(ctx, -jw, 0, jw, 0, [0, '#3a4a7a', 0.5, '#1e2a5a', 1, '#10173a']); ctx.fill();
+      ctx.lineWidth = ow * 0.9; ctx.strokeStyle = INK; ctx.stroke();
+      ctx.fillStyle = power === 2 ? '#ff7a1a' : '#58d6ff';
+      circle(ctx, 0, -4, 2.4); ctx.fill();
+      ctx.fillStyle = power === 2 ? '#ffe58a' : '#c8f4ff';
+      circle(ctx, 0, -4, 1.1); ctx.fill();
+      // flammes animees
+      var fl = 4 + Math.abs(Math.sin(t * 22)) * (pose === 'run' ? 7 : 3) + (pose === 'jump' ? 5 : 0);
+      ctx.beginPath(); ctx.moveTo(-jw + 1.5, 9); ctx.lineTo(0, 9 + fl + 4); ctx.lineTo(jw - 1.5, 9); ctx.closePath();
+      ctx.fillStyle = pose === 'run' || pose === 'jump' ? '#ff9d2e' : 'rgba(255,157,46,0.55)'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-3, 9); ctx.lineTo(0, 9 + fl); ctx.lineTo(3, 9); ctx.closePath();
+      ctx.fillStyle = '#fff6b8'; ctx.fill();
+      ctx.restore();
+    })();
     drawArm(-1.6, SY, armB, false);
-    // pull
+    // === combinaison Galaxy : bleu nuit + orange ===
+    var suitC0 = power === 2 ? '#2a3f8f' : '#25336b';
+    var suitC1 = power === 2 ? '#ff8a2a' : '#33478c';
+    var suitL = power === 2 ? '#ffd23f' : '#58d6ff';
     rrect(ctx, -9.8, -22.2, 19.6, 24.4, 5.5);
-    ctx.fillStyle = lin(ctx, -10, 0, 10, 0, [0, '#e4e6f4', 0.45, '#ffffff', 1, '#dadded']); ctx.fill();
+    ctx.fillStyle = lin(ctx, -10, 0, 10, 0, [0, suitC0, 0.5, suitC1, 1, suitC0]); ctx.fill();
     ctx.lineWidth = ow; ctx.strokeStyle = INK; ctx.stroke();
-    ctx.fillStyle = '#d3d6e8'; rrect(ctx, -9.2, -1.4, 18.4, 2.8, 1.4); ctx.fill();
-    // col noir
+    // bande ventrale lumineuse
+    ctx.fillStyle = suitL; rrect(ctx, -9.2, -1.4, 18.4, 3.2, 1.6); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; rrect(ctx, -9.2, -1.4, 18.4, 1.2, 1); ctx.fill();
+    // plastron + coeur d'energie
+    rrect(ctx, -6.5, -19, 13, 11, 3);
+    ctx.fillStyle = lin(ctx, 0, -19, 0, -8, [0, '#ffffff', 1, '#c8d4f5']); ctx.fill();
+    ctx.lineWidth = ow * 0.8; ctx.strokeStyle = INK; ctx.stroke();
+    var pulse = 1 + Math.sin(t * 6) * 0.15;
+    ctx.save(); ctx.translate(1, -13.5); ctx.scale(pulse, pulse);
+    circle(ctx, 0, 0, 3.2); ctx.fillStyle = power === 2 ? '#ff7a1a' : '#00e5ff'; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = INK; ctx.stroke();
+    circle(ctx, -0.8, -0.8, 1); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.restore();
+    // col
     ctx.beginPath(); ctx.ellipse(1, -21.8, 7.6, 3.3, 0, 0, TAU);
-    ctx.fillStyle = power === 2 ? '#ff7a1a' : '#16161d'; ctx.fill(); ctx.lineWidth = ow * 0.8; ctx.strokeStyle = INK; ctx.stroke();
-    ctx.save(); ctx.setLineDash([1.2, 1.3]); ctx.strokeStyle = '#d9dcf0'; ctx.lineWidth = 0.9;
-    ctx.beginPath(); ctx.ellipse(1, -21.6, 6.3, 2.3, 0, 0.1, PI - 0.1); ctx.stroke(); ctx.restore();
-    // PARIS
+    ctx.fillStyle = power === 2 ? '#ff7a1a' : '#0f1836'; ctx.fill(); ctx.lineWidth = ow * 0.8; ctx.strokeStyle = INK; ctx.stroke();
+    // WASSEL GALAXY
     ctx.save(); ctx.scale(face, 1);
-    ctx.font = '4.7px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '4.2px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0.5px';
-    ctx.fillStyle = '#1c1d27'; ctx.fillText('PARIS', face * 1.2, -11);
+    ctx.fillStyle = '#ffffff'; ctx.fillText('WASSEL', face * 1.2, -6.5);
     ctx.restore();
     // tête
     ctx.save(); ctx.translate(1.6, -33.2); ctx.rotate(headRot); ctx.scale(0.82, 0.82);
