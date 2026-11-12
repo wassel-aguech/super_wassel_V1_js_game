@@ -208,7 +208,48 @@ function syncTouchControls() {
     b.flagX = 214;
     return b.done('1-4', 'dusk', 360, 'dusk');
   }
-  var LEVELS = [level1, level2, level3, level4];
+  function level5() {
+    // 1-5 "Usine infernale" : parcours final, trous longs et ennemis rapproches
+    var b = new Builder(260);
+    b.ground(0, 260)
+      .cut(20, 25).cut(34, 40).cut(49, 56).cut(65, 72)
+      .cut(82, 88).cut(98, 105).cut(115, 123).cut(133, 140)
+      .cut(150, 158).cut(168, 177).cut(187, 196).cut(207, 216);
+
+    // Petites plateformes de secours : les sauts restent exigeants.
+    b.platform(22, 24, 10).platform(36, 39, 9).platform(51, 55, 10)
+      .platform(67, 71, 9).platform(84, 87, 10).platform(100, 104, 8)
+      .platform(117, 122, 10).platform(135, 139, 9).platform(152, 157, 10)
+      .platform(170, 176, 8).platform(189, 195, 10).platform(209, 215, 9);
+    b.platform(58, 63, 6).platform(106, 112, 6).platform(180, 185, 6);
+
+    b.put(12, 8, '?').put(14, 8, 'B').put(15, 8, 'M').put(16, 8, 'W')
+      .put(58, 6, '?').put(61, 6, 'M').put(107, 6, '?').put(110, 6, 'W')
+      .put(181, 6, 'M').put(184, 6, '?').put(222, 8, '?');
+    [24, 40, 56, 72, 88, 105, 123, 140, 158, 177, 196, 216].forEach(function (x) {
+      b.coins(x, 8, 3);
+    });
+
+    b.pipe(16, 3).pipe(31, 4).pipe(45, 2).pipe(61, 4).pipe(76, 3)
+      .pipe(92, 4).pipe(109, 3).pipe(126, 4).pipe(143, 3).pipe(161, 4)
+      .pipe(179, 3).pipe(198, 4).pipe(218, 2);
+
+    b.enemy('slime', 18, 11).enemy('shellbug', 27, 11).enemy('shooter', 30, 11);
+    b.enemy('slime', 42, 11).enemy('shellbug', 47, 11).enemy('chaser', 58, 11);
+    b.enemy('slime', 63, 11).enemy('shooter', 73, 11).enemy('shellbug', 79, 11);
+    b.enemy('chaser', 91, 11).enemy('slime', 96, 11).enemy('shellbug', 108, 11);
+    b.enemy('shooter', 114, 11).enemy('slime', 124, 11).enemy('chaser', 130, 11);
+    b.enemy('shellbug', 142, 11).enemy('slime', 147, 11).enemy('shooter', 159, 11);
+    b.enemy('chaser', 166, 11).enemy('shellbug', 178, 11).enemy('slime', 186, 11);
+    b.enemy('shooter', 197, 11).enemy('shellbug', 204, 11).enemy('chaser', 218, 11);
+    b.enemy('drone-gunner', 58, 5).enemy('drone-gunner', 106, 5)
+      .enemy('drone-gunner', 181, 5).enemy('drone-gunner', 224, 6);
+
+    b.stairs(236, 8);
+    b.flagX = 248;
+    return b.done('1-5', 'factory', 390, 'dusk');
+  }
+  var LEVELS = [level1, level2, level3, level4, level5];
 
   /* ------------------------------------------------------------------- état */
   var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play', nextLevel: 0, dialogLine: 0,
@@ -887,7 +928,7 @@ function syncTouchControls() {
     else if (P.speedT > 0) ART.outlineText(ctx, 'Vitesse ' + Math.ceil(P.speedT) + 's', VW / 2, 58, 16, 'center', '#ffe066');
     else if (P.slowT > 0) ART.outlineText(ctx, 'Ralenti ' + Math.ceil(P.slowT) + 's', VW / 2, 58, 16, 'center', '#c69cff');
     if (G.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.5, G.flash) + ')'; ctx.fillRect(0, 0, VW, VH); }
-    if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !'][G.level] || ''], true);
+    if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !', 'ULTIME : parcours long, trous géants et ennemis partout !'][G.level] || ''], true);
     else if (G.state === 'pause') drawCard(['Pause', 'Appuie sur P pour reprendre'], false);
     else if (G.state === 'dialog') drawCard(['Entre les niveaux', ['Le chemin devient plus dangereux…', 'Prépare ton équipement avant de repartir.'][G.dialogLine]], false);
     else if (G.state === 'shop') drawCard(['BOUTIQUE · ' + G.coins + ' pièces', '1 Vie 50 · 2 Munitions 30 · 3 Énergie +20 75 · Entrée : continuer'], false);
