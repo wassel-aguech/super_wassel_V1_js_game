@@ -69,9 +69,9 @@
     muteBtn.textContent = AU.isMuted() ? 'Son : off' : 'Son : on';
   }
   function togglePause() {
-    if (G.state === 'play') { G.prev = 'play'; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true);setOnlinePlaying(false) }
-    else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now();setOnlinePlaying(true) }
-  }
+  if (G.state === 'play') { G.prev = 'play'; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true); setOnlinePlaying(false); }
+  else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now(); setOnlinePlaying(true); }
+}
   muteBtn.addEventListener('click', function () { AU.init(); toggleMute(); });
   pauseBtn.addEventListener('click', togglePause);
   playBtn.addEventListener('click', function () { AU.init(); startGame(); });
@@ -521,11 +521,12 @@
   }
 
   function update(dt) {
-    G.t += dt;
-    if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
-  if (G.state === 'over' || G.state === 'win') updateParticles(dt);
-  return;
-}
+  G.t += dt;
+  if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
+    if (G.state === 'over' || G.state === 'win') updateParticles(dt);
+    return;
+  }
+  if (G.freeze > 0) { G.freeze -= dt; return; }
     }
     if (G.freeze > 0) { G.freeze -= dt; return; }
     G.shake = Math.max(0, G.shake - dt * 28); G.flash = Math.max(0, G.flash - dt * 1.4);
