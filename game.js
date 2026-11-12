@@ -3,7 +3,7 @@
   'use strict';
   var W = window.WASSEL, AU = W.audio, ART = W.art, SFX = AU.sfx;
   var T = 32, VW = 800, VH = 448, ROWS = 14, STEP = 1 / 60, PI = Math.PI, TAU = PI * 2;
-  var SOLID = 'GB?MWSUpqlr';
+  var SOLID = 'GB?MWHTV1Upqlr';
   function $(id) { return document.getElementById(id); }
    function setOnlinePlaying(value) {
      try {
@@ -114,8 +114,8 @@
     b.pipe(31, 2).pipe(41, 3).pipe(49, 4);
     b.enemy('slime', 24, 11).enemy('slime', 36, 11).enemy('slime', 45, 11);
     b.coins(54, 9, 3);
-    b.row(60, 67, 8, 'B').put(63, 8, '?').put(62, 4, '?').put(64, 4, 'M').put(66, 4, 'B');
-    b.enemy('shellbug', 70, 11).enemy('drone-gunner', 78, 7).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 94, 7).enemy('slime', 74, 11).enemy('slime', 77, 11);
+    b.row(60, 67, 8, 'B').put(63, 8, '?').put(62, 4, '?').put(64, 4, 'M').put(66, 4, 'B').put(68, 8, 'H');
+    b.enemy('shellbug', 70, 11).enemy('shooter', 74, 11).enemy('drone-gunner', 78, 7).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 94, 7).enemy('chaser', 77, 11);
     b.coins(72, 9, 5);
     b.pipe(82, 2).pipe(87, 3);
     b.coins(92, 9, 3);
@@ -131,8 +131,8 @@
     var b = new Builder(154);
     b.ground(0, 154).cut(30, 34).cut(62, 66).cut(92, 97).cut(112, 116);
     for (var x = 8; x < 140; x++) { b.put(x, 0, 'S').put(x, 1, 'S'); }
-    b.put(12, 8, '?').put(13, 8, 'B').put(14, 8, 'M').put(15, 8, 'B');
-    b.enemy('slime', 19, 11).enemy('shellbug', 23, 11).enemy('slime', 26, 11);
+    b.put(12, 8, '?').put(13, 8, 'B').put(14, 8, 'M').put(15, 8, 'B').put(16, 8, 'T');
+    b.enemy('slime', 19, 11).enemy('shellbug', 23, 11).enemy('shooter', 26, 11);
     b.coins(30, 8, 4);
     b.pipe(38, 3).enemy('slime', 41, 11).enemy('slime', 43, 11).pipe(47, 2);
     b.row(52, 58, 8, 'B').put(54, 8, '?').put(56, 8, '?').enemy('shellbug', 53, 7);
@@ -140,8 +140,8 @@
     b.enemy('slime', 70, 11).enemy('slime', 73, 11).enemy('shellbug', 77, 11).enemy('slime', 80, 11);
     b.pipe(84, 3).pipe(88, 4);
     b.platform(94, 96, 10).coins(93, 8, 3);
-    b.row(100, 106, 8, 'B').put(102, 8, 'M').put(104, 8, '?');
-    b.enemy('shellbug', 99, 11).enemy('slime', 108, 11);
+    b.row(100, 106, 8, 'B').put(102, 8, 'M').put(104, 8, '?').put(106, 8, 'V');
+    b.enemy('shellbug', 99, 11).enemy('slime', 108, 11).enemy('chaser', 113, 11);
     b.coins(112, 8, 4);
     b.enemy('slime', 120, 11).enemy('slime', 122, 11).enemy('shellbug', 126, 11).pipe(130, 2);
     b.stairs(133, 6);
@@ -155,7 +155,7 @@
       .forEach(function (p) { b.platform(p[0], p[1], p[2]); });
     b.put(18, 6, '?').put(19, 6, 'M').put(35, 6, '?').put(51, 6, 'W').put(68, 6, 'M').put(85, 6, '?').put(102, 6, 'M').put(119, 6, '?').put(138, 6, '?').put(139, 6, '?');
     [21, 38, 55, 72, 89, 106, 123, 142].forEach(function (x) { b.coins(x, 8, 4); });
-    b.enemy('slime', 52, 9).enemy('shellbug', 69, 9).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 103, 6).enemy('slime', 120, 9).enemy('drone-gunner', 138, 6).enemy('drone-gunner', 150, 6).enemy('drone-gunner', 162, 7).enemy('slime', 155, 11).enemy('slime', 158, 11);
+    b.enemy('slime', 52, 9).enemy('shellbug', 69, 9).enemy('shooter', 76, 9).enemy('drone-gunner', 86, 6).enemy('drone-gunner', 103, 6).enemy('chaser', 120, 9).enemy('drone-gunner', 138, 6).enemy('drone-gunner', 150, 6).enemy('drone-gunner', 162, 7).enemy('slime', 155, 11).enemy('shooter', 158, 11);
     b.stairs(152, 5);
     b.flagX = 162;
     return b.done('1-3', 'dusk', 330, 'dusk');
@@ -172,8 +172,8 @@
     // plateformes hautes a bonus
     b.platform(52, 58, 8).platform(106, 112, 8).platform(132, 138, 8).platform(184, 190, 8);
     // blocs : peu de recompenses, bien places
-    b.put(12, 8, '?').put(14, 8, 'B').put(15, 8, 'M').put(16, 8, 'B');
-    b.put(54, 8, '?').put(56, 8, 'W').put(108, 8, 'M').put(110, 8, '?');
+    b.put(12, 8, '?').put(14, 8, 'B').put(15, 8, 'M').put(16, 8, 'B').put(17, 8, '1');
+    b.put(54, 8, '?').put(56, 8, 'W').put(58, 8, 'H').put(108, 8, 'M').put(110, 8, '?').put(112, 8, 'T');
     b.put(134, 8, '?').put(136, 8, 'M').put(186, 8, '?').put(188, 8, 'B');
     b.row(60, 64, 6, 'B').put(62, 6, '?');
     b.row(160, 164, 6, 'B').put(162, 6, 'M');
@@ -186,12 +186,12 @@
     b.pipe(110, 3).pipe(116, 4).pipe(136, 4).pipe(144, 2).pipe(166, 3).pipe(192, 2);
     // ennemis : dense, alterne slime / shellbug, certains sur plateformes
     b.enemy('slime', 20, 11).enemy('shellbug', 32, 11).enemy('slime', 34, 11);
-    b.enemy('slime', 54, 11).enemy('shellbug', 58, 11).enemy('slime', 63, 11);
+    b.enemy('slime', 54, 11).enemy('shellbug', 58, 11).enemy('shooter', 63, 11);
     b.enemy('shellbug', 80, 11).enemy('slime', 84, 11).enemy('shellbug', 89, 11).enemy('slime', 92, 11);
-    b.enemy('slime', 106, 11).enemy('shellbug', 113, 11).enemy('slime', 118, 11);
+    b.enemy('slime', 106, 11).enemy('shellbug', 113, 11).enemy('chaser', 118, 11);
     b.enemy('shellbug', 133, 11).enemy('slime', 139, 11).enemy('slime', 144, 11);
     b.enemy('slime', 159, 11).enemy('shellbug', 166, 11).enemy('slime', 170, 11);
-    b.enemy('shellbug', 184, 11).enemy('slime', 190, 11).enemy('shellbug', 196, 11).enemy('slime', 199, 11);
+    b.enemy('shellbug', 184, 11).enemy('shooter', 190, 11).enemy('shellbug', 196, 11).enemy('chaser', 199, 11);
     b.enemy('shellbug', 54, 7).enemy('drone-gunner', 82, 6).enemy('drone-gunner', 108, 6).enemy('slime', 108, 7).enemy('drone-gunner', 125, 6).enemy('drone-gunner', 145, 6).enemy('drone-gunner', 165, 7).enemy('shellbug', 186, 7);
     b.stairs(204, 7);
     b.flagX = 214;
@@ -207,7 +207,7 @@
   try { best = parseInt(localStorage.getItem('wassel-best') || '0', 10) || 0; } catch (e) {}
 
   function makePlayer(tx, ty, power) {
-    P = { x: 0, y: 0, w: 16, h: 30, normalH: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, inv: 0, star: 0, coyote: 0, jumps: 0, wallDir: 0, slide: false, dashCd: 0, dashT: 0, anim: 0,
+    P = { x: 0, y: 0, w: 16, h: 30, normalH: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, shield: 0, speedT: 0, slowT: 0, inv: 0, star: 0, coyote: 0, jumps: 0, wallDir: 0, slide: false, dashCd: 0, dashT: 0, anim: 0,
       combo: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
     setPower(power || 0);
     P.x = tx * T + (T - P.w) / 2;
@@ -341,8 +341,9 @@
       sparkle(px + 16, py, 6, '#ffe066');
     } else if (c === 'M') {
       L.g[ty][tx] = 'U'; bumps[ty * 1000 + tx] = 0.2; spawnItem(P.power === 0 ? 'cap' : 'fire', tx, ty); SFX.bump();
-    } else if (c === 'W') {
-      L.g[ty][tx] = 'U'; bumps[ty * 1000 + tx] = 0.2; spawnItem('crown', tx, ty); SFX.bump();
+    } else if (c === 'W' || c === 'H' || c === 'V' || c === 'T' || c === '1') {
+      var itemType = c === 'W' ? 'crown' : c === 'H' ? 'shield' : c === 'V' ? 'speed' : c === 'T' ? 'slow' : 'life';
+      L.g[ty][tx] = 'U'; bumps[ty * 1000 + tx] = 0.2; spawnItem(itemType, tx, ty); SFX.bump();
     } else if (c === 'B') {
       if (P.power > 0) {
         L.g[ty][tx] = ' ';
@@ -364,13 +365,16 @@
       var it = items[i];
       if (it.emerge < 1) {
         it.emerge = Math.min(1, it.emerge + dt / 0.4); it.y = it.y0 + (it.y1 - it.y0) * it.emerge;
-        if (it.emerge >= 1) { if (it.t === 'cap') it.vx = 70; if (it.t === 'crown') { it.vx = 80; it.vy = -380; } }
+        if (it.emerge >= 1) {
+          if (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life') it.vx = 70;
+          if (it.t === 'crown') { it.vx = 80; it.vy = -380; }
+        }
         continue;
       }
       if (it.t !== 'fire') {
         it.vy = Math.min(it.vy + 1800 * dt, 700); moveX(it, dt);
         if (it.hitX) it.dir = -it.dir;
-        it.vx = (it.t === 'cap' ? 70 : 85) * it.dir; moveY(it, dt);
+        it.vx = (it.t === 'cap' || it.t === 'shield' || it.t === 'speed' || it.t === 'slow' || it.t === 'life' ? 70 : 85) * it.dir; moveY(it, dt);
         if (it.t === 'crown' && it.ground) it.vy = -420;
         if (it.y > VH + 60) { items.splice(i, 1); continue; }
       }
@@ -379,6 +383,10 @@
         addScore(1000, it.x, it.y); G.flash = 0.22; ring(P.x + P.w / 2, P.y + P.h / 2, '#ffe066', 34); sparkle(P.x + P.w / 2, P.y + P.h / 2, 16);
         if (it.t === 'cap') { if (P.power < 1) setPower(1); SFX.power(); }
         else if (it.t === 'fire') { setPower(2); SFX.power(); }
+        else if (it.t === 'shield') { P.shield = 12; P.inv = 0.4; SFX.power(); }
+        else if (it.t === 'speed') { P.speedT = 8; SFX.power(); }
+        else if (it.t === 'slow') { P.slowT = 8; SFX.power(); }
+        else if (it.t === 'life') { G.lives++; SFX.oneup(); }
         else { P.star = 10; SFX.star(); AU.setStar(true); }
       }
     }
@@ -386,13 +394,36 @@
 
   /* ---------------------------------------------------------------- ennemis */
   function makeEnemy(t, tx, ty) {
-    var e = { t: t, w: 28, h: t === 'slime' ? 24 : 26, vx: -50, vy: 0, state: 'walk', dir: -1, timer: 0, kick: 0, act: false, shellV: 0, ground: false, hitX: false, head: null };
+    var e = { t: t, w: 28, h: t === 'slime' ? 24 : 26, vx: -50, vy: 0, state: 'walk', dir: -1, timer: 0, kick: 0, act: false, shellV: 0, ground: false, hitX: false, head: null, hp: 1, maxHp: 1, hitT: 0 };
     if (t.indexOf('drone') === 0) {
       e.w = 30; e.h = 24; e.vx = -46; e.state = 'fly';
       e.hoverY = ty * T + 4; e.hoverPhase = tx * 0.8;
       e.shotT = 1.2 + (tx % 3) * 0.25;
+    } else if (t === 'shooter') {
+      e.vx = -42; e.shotT = 1.1 + (tx % 3) * 0.2; e.hp = e.maxHp = 2;
+    } else if (t === 'chaser') {
+      e.vx = -52; e.hp = e.maxHp = 2;
     }
     e.x = tx * T + (T - e.w) / 2; e.y = (ty + 1) * T - e.h; return e;
+  }
+  // Les tireurs et les drones partagent une visée 2D vers le joueur.
+  function isFlyingEnemy(e) { return e.t.indexOf('drone') === 0; }
+  function shootAtPlayer(e) {
+    var dx = P.x + P.w / 2 - (e.x + e.w / 2), dy = P.y + P.h / 2 - (e.y + e.h / 2);
+    var dist = Math.max(1, Math.sqrt(dx * dx + dy * dy)), speed = 260;
+    enemyShots.push({ x: e.x + e.w / 2 - 5, y: e.y + e.h / 2 - 5, w: 10, h: 10, vx: dx / dist * speed, vy: dy / dist * speed, ttl: 3 });
+  }
+  function damageEnemy(e, amount, dirx) {
+    if (e.state === 'dead' || e.state === 'fall') return;
+    e.hp -= amount || 1; e.hitT = 0.22;
+    sparkle(e.x + e.w / 2, e.y + e.h / 2, 5, '#ffe066');
+    if (e.hp <= 0) {
+      e.state = 'dead'; e.timer = 0.45; e.vx = 0; e.vy = 0;
+      addScore(250, e.x, e.y - 10); SFX.stomp(); explosionBurst(e.x + e.w / 2, e.y + e.h / 2, '#ff5a64');
+    } else {
+      e.vx = (dirx || -e.dir || 1) * 120; e.vy = -120;
+      G.freeze = Math.max(G.freeze, 0.05); G.shake = Math.max(G.shake, 2);
+    }
   }
   function knock(e, dirx) {
     if (e.state === 'fall') return;
@@ -407,7 +438,8 @@
       if (e.state === 'fall') { e.vy += 1800 * dt; e.y += e.vy * dt; e.x += e.vx * dt; if (e.y > VH + 100) enemies.splice(i, 1); continue; }
       if (!e.act) { if (e.x < G.camX + VW + 40) e.act = true; else continue; }
       if (e.kick > 0) e.kick -= dt;
-      if (e.t.indexOf('drone') === 0) {
+      e.hitT = Math.max(0, e.hitT - dt);
+      if (isFlyingEnemy(e)) {
         e.dir = P.x < e.x ? -1 : 1;
         e.vx = e.dir * 46;
         e.y = e.hoverY + Math.sin(G.t * 3.2 + e.hoverPhase) * 10;
@@ -415,24 +447,22 @@
         e.shotT -= dt;
         if (e.shotT <= 0 && Math.abs(P.x - e.x) < 520) {
           e.shotT = 1.35;
-          var dx = P.x + P.w / 2 - (e.x + e.w / 2);
-          var dy = P.y + P.h / 2 - (e.y + e.h / 2);
-          var dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-          var speed = 260;
-          enemyShots.push({
-            x: e.x + e.w / 2 - 5, y: e.y + e.h / 2 - 5, w: 10, h: 10,
-            vx: dx / dist * speed, vy: dy / dist * speed, ttl: 3
-          });
+          shootAtPlayer(e);
         }
       } else {
-        if (e.state === 'walk') e.vx = e.dir * (e.t === 'slime' ? 50 : 56); else e.vx = e.shellV;
+        if (e.t === 'chaser' && Math.abs(P.x - e.x) < 240) e.dir = P.x < e.x ? -1 : 1;
+        if (e.state === 'walk') e.vx = e.dir * (e.t === 'chaser' ? 115 : e.t === 'shooter' ? 42 : e.t === 'slime' ? 50 : 56); else e.vx = e.shellV;
+        if (e.t === 'shooter') {
+          e.shotT -= dt;
+          if (e.shotT <= 0 && Math.abs(P.x - e.x) < 500) { e.shotT = 1.7; shootAtPlayer(e); }
+        }
         e.vy = Math.min(e.vy + 2000 * dt, 800); moveX(e, dt);
       }
       if (e.hitX) {
-        if (e.state === 'walk' || e.t.indexOf('drone') === 0) e.dir = -e.dir;
+        if (e.state === 'walk' || isFlyingEnemy(e)) e.dir = -e.dir;
         else if (e.shellV !== 0) { e.shellV = -e.shellV; SFX.bump(); }
       }
-      if (e.t.indexOf('drone') !== 0) moveY(e, dt);
+      if (!isFlyingEnemy(e)) moveY(e, dt);
       if (e.y > VH + 100) enemies.splice(i, 1);
     }
     enemies.forEach(function (s) {
@@ -456,7 +486,7 @@
         continue;
       }
       if (stomp) {
-        if (e.t === 'slime' || e.t.indexOf('drone') === 0) { e.state = 'dead'; e.timer = 0.4; e.y += e.h - 10; e.h = 10; e.vx = 0; }
+        if (e.t === 'slime' || e.t === 'shooter' || e.t === 'chaser' || isFlyingEnemy(e)) damageEnemy(e, e.hp, P.face);
         else if (e.state === 'walk') { e.state = 'shell'; e.shellV = 0; e.vx = 0; e.y += e.h - 20; e.h = 20; e.kick = 0.25; }
         else { e.shellV = 0; e.vx = 0; e.kick = 0.25; }
         addScore([100, 200, 400, 800, 1000, 2000][Math.min(P.combo, 5)], e.x, e.y - 12); P.combo++;
@@ -481,7 +511,7 @@
       if (!dead) for (var j = 0; j < enemies.length; j++) {
         var e = enemies[j];
         if (e.state === 'dead' || e.state === 'fall' || !e.act) continue;
-        if (hit(f, e)) { knock(e, f.dir); dead = true; break; }
+        if (hit(f, e)) { damageEnemy(e, 1, f.dir); dead = true; break; }
       }
       if (dead) { explosionBurst(f.x + 6, f.y + 6, '#ff9d2e'); SFX.fireHit(); fireballs.splice(i, 1); }
       else f.vx = f.dir * 420;
@@ -500,6 +530,11 @@
   /* ----------------------------------------------------------------- joueur */
   function hurt() {
     if (P.inv > 0 || P.star > 0 || G.state !== 'play') return;
+    if (P.shield > 0) {
+      P.shield = 0; P.inv = 0.8; SFX.hurt(); G.shake = 6;
+      explosionBurst(P.x + P.w / 2, P.y + P.h / 2, '#58d6ff');
+      return;
+    }
     if (P.power > 0) { setPower(P.power - 1); P.inv = 1.6; SFX.hurt(); G.shake = 6; ring(P.x + P.w / 2, P.y + P.h / 2, '#ff6a6a', 30); }
     else die();
   }
@@ -511,6 +546,9 @@
   function updatePlayer(dt) {
     var dir = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0);
     P.dashCd = Math.max(0, P.dashCd - dt);
+    P.shield = Math.max(0, P.shield - dt);
+    P.speedT = Math.max(0, P.speedT - dt);
+    P.slowT = Math.max(0, P.slowT - dt);
     if (dashReq) {
       dashReq = false;
       if (P.dashCd <= 0 && !P.slide) {
@@ -523,6 +561,7 @@
       P.dashT -= dt; P.vx = P.face * 520;
     } else {
       var maxV = P.slide ? 320 : (isRun() ? 280 : 180);
+      if (P.speedT > 0) maxV *= 1.35;
       if (dir) { P.face = dir; P.vx = approach(P.vx, dir * maxV, (P.ground ? (P.vx * dir < 0 ? 2600 : 1300) : 900) * dt); }
       else P.vx = approach(P.vx, 0, (P.ground ? (P.slide ? 900 : 1500) : 250) * dt);
     }
@@ -632,7 +671,7 @@
     if (G.state === 'play') {
       updatePlayer(dt);
       if (G.state === 'play') {
-        G.timeAcc += dt;
+        G.timeAcc += dt * (P.slowT > 0 ? 0.45 : 1);
         if (G.timeAcc >= 1) {
           G.timeAcc -= 1; G.time--;
           if (G.time === 100 && !G.hurry) { G.hurry = true; SFX.hurry(); AU.hurry(true); }
@@ -641,7 +680,10 @@
       }
     } else updateGoal(dt);
     if (G.state === 'play' || G.state === 'flag' || G.state === 'walk') {
-      if (G.state === 'play') { updateEnemies(dt); updateFireballs(dt); updateEnemyShots(dt); }
+      if (G.state === 'play') {
+        var enemyDt = dt * (P.slowT > 0 ? 0.45 : 1);
+        updateEnemies(enemyDt); updateFireballs(dt); updateEnemyShots(enemyDt);
+      }
       updateItems(dt);
     }
     var target = Math.max(0, Math.min(P.x - 300 + P.vx * 0.12, L.w * T - VW));
@@ -709,6 +751,7 @@
     }
     ctx.save();
     if (P.star > 0 && (P.star > 2 || Math.floor(G.t * 12) % 2 === 0)) { ctx.shadowColor = Math.floor(G.t * 10) % 2 ? '#ffe066' : '#7af0ff'; ctx.shadowBlur = 18; }
+    if (P.shield > 0) { ctx.strokeStyle = '#58d6ff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.arc(cx, P.y + P.h / 2, 20, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; }
     ART.drawHero(ctx, cx, by, s, P.face, { pose: pose, ph: P.anim * 1.0, t: G.t, power: P.power, sq: P.sq });
     ctx.restore();
   }
@@ -752,6 +795,9 @@
     ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
     ART.drawHud(ctx, { lives: G.lives, hearts: Math.min(3, P.power + 1), coins: G.coins, score: G.score, level: L.name, time: G.time }, avatar, G.t);
     if (P.star > 0) ART.outlineText(ctx, 'Couronne ' + Math.ceil(P.star) + 's', VW / 2, 34, 20, 'center', '#ffe066');
+    if (P.shield > 0) ART.outlineText(ctx, 'Bouclier ' + Math.ceil(P.shield) + 's', VW / 2, 58, 16, 'center', '#58d6ff');
+    else if (P.speedT > 0) ART.outlineText(ctx, 'Vitesse ' + Math.ceil(P.speedT) + 's', VW / 2, 58, 16, 'center', '#ffe066');
+    else if (P.slowT > 0) ART.outlineText(ctx, 'Ralenti ' + Math.ceil(P.slowT) + 's', VW / 2, 58, 16, 'center', '#c69cff');
     if (G.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.5, G.flash) + ')'; ctx.fillRect(0, 0, VW, VH); }
     if (G.state === 'intro') drawCard(['Niveau ' + L.name, ['Cours, saute et atteins le château', 'La nuit tombe… reste vif !', 'Le vide partout — ne tombe pas !', 'EXPERT : trous de 5 cases, carapaces en chaîne !'][G.level] || ''], true);
     else if (G.state === 'pause') drawCard(['Pause', 'Appuie sur P pour reprendre'], false);
