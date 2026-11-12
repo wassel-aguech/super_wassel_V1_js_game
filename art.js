@@ -755,6 +755,21 @@
       ctx.strokeStyle = '#ff5a64'; ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(-3, -2); ctx.moveTo(3, -8); ctx.lineTo(10, -2); ctx.stroke();
       ctx.restore(); return;
     }
+
+    art.drawBoss = function (ctx, b, t) {
+      var cx = b.x + b.w / 2, by = b.y + b.h, bob = b.state === 'active' ? Math.sin(t * 3) * 3 : 0;
+      ctx.save(); ctx.translate(cx, by + bob);
+      ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(0, 3, 30, 5, 0, 0, TAU); ctx.fill();
+      ctx.globalAlpha = b.state === 'dead' ? Math.max(0, b.timer / 2.2) : 1;
+      ctx.fillStyle = b.phase === 3 ? '#8a2be2' : b.phase === 2 ? '#d34a4a' : '#3f6edb';
+      ctx.strokeStyle = '#0b1026'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(0, -35, 34, 30, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#111a3d'; ctx.beginPath(); ctx.ellipse(0, -40, 22, 16, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = b.hitT > 0 ? '#fff' : '#ff5a64'; ctx.beginPath(); ctx.arc(0, -40, 8 + Math.sin(t * 8) * 1.5, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(-26, -55); ctx.lineTo(-16, -75); ctx.lineTo(-6, -57); ctx.lineTo(6, -57); ctx.lineTo(16, -75); ctx.lineTo(26, -55); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#293a70'; ctx.fillRect(-28, -15, 56, 10); ctx.fillStyle = '#ff7a1a'; ctx.fillRect(-22, -13, 44, 4);
+      ctx.restore();
+    };
     if (e.hitT > 0 && Math.floor(e.hitT * 30) % 2 === 0) ctx.globalAlpha = 0.48;
     ctx.lineJoin = 'round';
     // ---------- ROBO-ROVER ----------
