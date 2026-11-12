@@ -111,7 +111,7 @@
     b.enemy('slime', 24, 11).enemy('slime', 36, 11).enemy('slime', 45, 11);
     b.coins(54, 9, 3);
     b.row(60, 67, 8, 'B').put(63, 8, '?').put(62, 4, '?').put(64, 4, 'M').put(66, 4, 'B');
-    b.enemy('shellbug', 70, 11).enemy('drone', 78, 7).enemy('slime', 74, 11).enemy('slime', 77, 11);
+    b.enemy('shellbug', 70, 11).enemy('drone-gunner', 78, 7).enemy('drone-flame', 86, 6).enemy('slime', 74, 11).enemy('slime', 77, 11);
     b.coins(72, 9, 5);
     b.pipe(82, 2).pipe(87, 3);
     b.coins(92, 9, 3);
@@ -151,7 +151,7 @@
       .forEach(function (p) { b.platform(p[0], p[1], p[2]); });
     b.put(18, 6, '?').put(19, 6, 'M').put(35, 6, '?').put(51, 6, 'W').put(68, 6, 'M').put(85, 6, '?').put(102, 6, 'M').put(119, 6, '?').put(138, 6, '?').put(139, 6, '?');
     [21, 38, 55, 72, 89, 106, 123, 142].forEach(function (x) { b.coins(x, 8, 4); });
-    b.enemy('slime', 52, 9).enemy('shellbug', 69, 9).enemy('drone', 86, 6).enemy('shellbug', 103, 9).enemy('slime', 120, 9).enemy('drone', 138, 6).enemy('slime', 155, 11).enemy('slime', 158, 11);
+    b.enemy('slime', 52, 9).enemy('shellbug', 69, 9).enemy('drone-flame', 86, 6).enemy('drone-gunner', 103, 6).enemy('slime', 120, 9).enemy('drone-flame', 138, 6).enemy('drone-gunner', 150, 6).enemy('slime', 155, 11).enemy('slime', 158, 11);
     b.stairs(152, 5);
     b.flagX = 162;
     return b.done('1-3', 'dusk', 330, 'dusk');
@@ -188,7 +188,7 @@
     b.enemy('shellbug', 133, 11).enemy('slime', 139, 11).enemy('slime', 144, 11);
     b.enemy('slime', 159, 11).enemy('shellbug', 166, 11).enemy('slime', 170, 11);
     b.enemy('shellbug', 184, 11).enemy('slime', 190, 11).enemy('shellbug', 196, 11).enemy('slime', 199, 11);
-    b.enemy('shellbug', 54, 7).enemy('drone', 82, 6).enemy('slime', 108, 7).enemy('shellbug', 186, 7);
+    b.enemy('shellbug', 54, 7).enemy('drone-gunner', 82, 6).enemy('drone-flame', 108, 6).enemy('slime', 108, 7).enemy('drone-gunner', 145, 6).enemy('shellbug', 186, 7);
     b.stairs(204, 7);
     b.flagX = 214;
     return b.done('1-4', 'dusk', 360, 'dusk');
@@ -198,7 +198,7 @@
   /* ------------------------------------------------------------------- état */
   var G = { state: 'title', lives: 3, score: 0, coins: 0, level: 0, time: 300, timeAcc: 0, timer: 0, camX: 0, t: 0, prev: 'play',
     flagY: 0, flagPts: 0, shake: 0, freeze: 0, flash: 0, castleFlag: 0, fwT: 0, hurry: false, tickN: 0 };
-  var L, P, enemies, items, fireballs, parts, pops, bumps;
+  var L, P, enemies, items, fireballs, enemyShots, parts, pops, bumps;
   var best = 0;
   try { best = parseInt(localStorage.getItem('wassel-best') || '0', 10) || 0; } catch (e) {}
 
@@ -218,7 +218,7 @@
     L = LEVELS[i]();
     G.level = i; G.time = L.time; G.timeAcc = 0; G.camX = 0; G.flagY = 3 * T + 8; G.castleFlag = 0; G.fwT = 0; G.hurry = false; G.shake = 0; G.flash = 0;
     AU.hurry(false); AU.setStar(false);
-    enemies = []; items = []; fireballs = []; parts = []; pops = []; bumps = {};
+    enemies = []; items = []; fireballs = []; enemyShots = []; parts = []; pops = []; bumps = {};
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
     jumpBuf = 0; fireReq = false;
@@ -352,9 +352,11 @@
   /* ---------------------------------------------------------------- ennemis */
   function makeEnemy(t, tx, ty) {
     var e = { t: t, w: 28, h: t === 'slime' ? 24 : 26, vx: -50, vy: 0, state: 'walk', dir: -1, timer: 0, kick: 0, act: false, shellV: 0, ground: false, hitX: false, head: null };
-    if (t === 'drone') {
+    if (t.indexOf('drone') === 0) {
       e.w = 30; e.h = 24; e.vx = -46; e.state = 'fly';
       e.hoverY = ty * T + 4; e.hoverPhase = tx * 0.8;
+      e.shotT = 1.2 + (tx % 3) * 0.25;
+      e.flameT = (tx % 2) * 0.3;
     }
     e.x = tx * T + (T - e.w) / 2; e.y = (ty + 1) * T - e.h; return e;
   }
@@ -371,19 +373,33 @@
       if (e.state === 'fall') { e.vy += 1800 * dt; e.y += e.vy * dt; e.x += e.vx * dt; if (e.y > VH + 100) enemies.splice(i, 1); continue; }
       if (!e.act) { if (e.x < G.camX + VW + 40) e.act = true; else continue; }
       if (e.kick > 0) e.kick -= dt;
-      if (e.t === 'drone') {
+      if (e.t.indexOf('drone') === 0) {
+        e.dir = P.x < e.x ? -1 : 1;
         e.vx = e.dir * 46;
         e.y = e.hoverY + Math.sin(G.t * 3.2 + e.hoverPhase) * 10;
         moveX(e, dt);
+        if (e.t === 'drone-gunner') {
+          e.shotT -= dt;
+          if (e.shotT <= 0 && Math.abs(P.x - e.x) < 420) {
+            e.shotT = 1.35;
+            enemyShots.push({ x: e.x + e.w / 2 - 5, y: e.y + e.h / 2 - 5, w: 10, h: 10, vx: (P.x < e.x ? -1 : 1) * 210, vy: 0, ttl: 3 });
+          }
+        } else {
+          e.flameT += dt;
+          var flameX = e.dir > 0 ? e.x + e.w : e.x - 78;
+          var flame = { x: flameX, y: e.y + 7, w: 78, h: 12 };
+          if (e.dir < 0) flame.x = e.x - 78;
+          if (hit(P, flame)) hurt();
+        }
       } else {
         if (e.state === 'walk') e.vx = e.dir * (e.t === 'slime' ? 50 : 56); else e.vx = e.shellV;
         e.vy = Math.min(e.vy + 2000 * dt, 800); moveX(e, dt);
       }
       if (e.hitX) {
-        if (e.state === 'walk' || e.t === 'drone') e.dir = -e.dir;
+        if (e.state === 'walk' || e.t.indexOf('drone') === 0) e.dir = -e.dir;
         else if (e.shellV !== 0) { e.shellV = -e.shellV; SFX.bump(); }
       }
-      if (e.t !== 'drone') moveY(e, dt);
+      if (e.t.indexOf('drone') !== 0) moveY(e, dt);
       if (e.y > VH + 100) enemies.splice(i, 1);
     }
     enemies.forEach(function (s) {
@@ -407,7 +423,7 @@
         continue;
       }
       if (stomp) {
-        if (e.t === 'slime' || e.t === 'drone') { e.state = 'dead'; e.timer = 0.4; e.y += e.h - 10; e.h = 10; e.vx = 0; }
+        if (e.t === 'slime' || e.t.indexOf('drone') === 0) { e.state = 'dead'; e.timer = 0.4; e.y += e.h - 10; e.h = 10; e.vx = 0; }
         else if (e.state === 'walk') { e.state = 'shell'; e.shellV = 0; e.vx = 0; e.y += e.h - 20; e.h = 20; e.kick = 0.25; }
         else { e.shellV = 0; e.vx = 0; e.kick = 0.25; }
         addScore([100, 200, 400, 800, 1000, 2000][Math.min(P.combo, 5)], e.x, e.y - 12); P.combo++;
@@ -436,6 +452,15 @@
       }
       if (dead) { sparkle(f.x, f.y, 8, '#ff9d2e'); ring(f.x + 6, f.y + 6, '#ffb040', 16); SFX.fireHit(); fireballs.splice(i, 1); }
       else f.vx = f.dir * 420;
+    }
+  }
+  function updateEnemyShots(dt) {
+    for (var i = enemyShots.length - 1; i >= 0; i--) {
+      var s = enemyShots[i];
+      s.ttl -= dt; s.x += s.vx * dt;
+      var tx = Math.floor((s.x + s.w / 2) / T), ty = Math.floor((s.y + s.h / 2) / T);
+      if (s.ttl <= 0 || solidAt(tx, ty) || s.x < G.camX - 60 || s.x > G.camX + VW + 60) { enemyShots.splice(i, 1); continue; }
+      if (G.state === 'play' && hit(P, s)) { enemyShots.splice(i, 1); hurt(); }
     }
   }
 
@@ -493,7 +518,7 @@
     G.state = 'flag'; P.vx = 0; P.vy = 0; P.x = L.flagX * T + 14 - P.w;
     var ratio = Math.max(0, Math.min(1, (12 * T - (P.y + P.h)) / (9 * T)));
     G.flagPts = Math.max(100, Math.round((100 + 4900 * ratio) / 100) * 100);
-    addScore(G.flagPts, P.x, P.y - 10); fireballs = []; AU.stop(); AU.setStar(false); P.star = 0; SFX.flag(); sparkle(P.x + P.w, P.y, 10);
+    addScore(G.flagPts, P.x, P.y - 10); fireballs = []; enemyShots = []; AU.stop(); AU.setStar(false); P.star = 0; SFX.flag(); sparkle(P.x + P.w, P.y, 10);
   }
   function updateGoal(dt) {
     if (G.state === 'flag') {
@@ -562,7 +587,7 @@
       }
     } else updateGoal(dt);
     if (G.state === 'play' || G.state === 'flag' || G.state === 'walk') {
-      if (G.state === 'play') { updateEnemies(dt); updateFireballs(dt); }
+      if (G.state === 'play') { updateEnemies(dt); updateFireballs(dt); updateEnemyShots(dt); }
       updateItems(dt);
     }
     var target = Math.max(0, Math.min(P.x - 300 + P.vx * 0.12, L.w * T - VW));
@@ -599,6 +624,19 @@
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, TAU); ctx.fill();
       ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.arc(cx, cy, 6.5, 0, TAU); ctx.fill();
       ctx.fillStyle = '#ffe58a'; ctx.beginPath(); ctx.arc(cx, cy, 3.2, 0, TAU); ctx.fill();
+    });
+    enemyShots.forEach(function (s) {
+      ctx.fillStyle = '#ff5a64'; ctx.beginPath(); ctx.arc(s.x + 5, s.y + 5, 6, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(s.x + 5, s.y + 5, 2.5, 0, TAU); ctx.fill();
+    });
+    enemies.forEach(function (e) {
+      if (e.t !== 'drone-flame' || e.state === 'dead' || !e.act) return;
+      var len = 78, fx = e.dir > 0 ? e.x + e.w : e.x - len, fy = e.y + 7;
+      ctx.save(); ctx.globalAlpha = 0.8;
+      ctx.fillStyle = 'rgba(255,90,30,0.28)'; ctx.fillRect(fx, fy - 5, len, 22);
+      ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.moveTo(fx, fy + 6); ctx.quadraticCurveTo(fx + len / 2, fy - 4 + Math.sin(G.t * 14) * 5, fx + len, fy + 6); ctx.quadraticCurveTo(fx + len / 2, fy + 16 + Math.sin(G.t * 12) * 4, fx, fy + 6); ctx.fill();
+      ctx.fillStyle = '#ffe066'; ctx.fillRect(fx + 8, fy + 2, Math.max(12, len - 20), 8);
+      ctx.restore();
     });
     pops.forEach(function (p) { ctx.globalAlpha = Math.max(0, 1 - p.t / 0.9); ART.outlineText(ctx, p.txt, p.x + 8, p.y, 17, 'center'); ctx.globalAlpha = 1; });
   }
