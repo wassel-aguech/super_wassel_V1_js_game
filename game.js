@@ -25,13 +25,15 @@
   } catch (e) {}
 
   /* ------------------------------------------------------------------ entrées */
-  var keys = {}, touch = { left: false, right: false, jump: false, run: false };
-  var jumpBuf = 0, fireReq = false;
+  var keys = {}, touch = { left: false, right: false, jump: false, run: false, slide: false };
+  var jumpBuf = 0, fireReq = false, dashReq = false;
   var JUMP_KEYS = { Space: 1, ArrowUp: 1, KeyW: 1 }, RUN_KEYS = { ShiftLeft: 1, ShiftRight: 1, KeyZ: 1, KeyX: 1 };
+  var DASH_KEYS = { KeyC: 1, ControlLeft: 1, ControlRight: 1 };
   function isLeft() { return keys.ArrowLeft || keys.KeyA || touch.left; }
   function isRight() { return keys.ArrowRight || keys.KeyD || touch.right; }
   function isJump() { return keys.Space || keys.ArrowUp || keys.KeyW || touch.jump; }
   function isRun() { return keys.ShiftLeft || keys.ShiftRight || keys.KeyZ || keys.KeyX || touch.run; }
+  function isSlide() { return keys.ArrowDown || keys.KeyS || touch.slide; }
 
   window.addEventListener('keydown', function (e) {
     var c = e.code;
@@ -39,16 +41,17 @@
     if (!keys[c]) {
       if (JUMP_KEYS[c]) jumpBuf = 0.12;
       if (RUN_KEYS[c]) fireReq = true;
+      if (DASH_KEYS[c]) dashReq = true;
       if (c === 'KeyP' || c === 'Escape') togglePause();
       if (c === 'KeyM') toggleMute();
       if ((c === 'Enter' || c === 'Space') && (G.state === 'title' || G.state === 'over' || G.state === 'win')) startGame();
     }
     keys[c] = true;
-    if (c.indexOf('Arrow') === 0 || c === 'Space') e.preventDefault();
+    if (c.indexOf('Arrow') === 0 || c === 'Space' || c === 'ControlLeft' || c === 'ControlRight') e.preventDefault();
   });
   window.addEventListener('keyup', function (e) { keys[e.code] = false; });
   window.addEventListener('blur', function () {
-    keys = {}; touch.left = touch.right = touch.jump = touch.run = false;
+    keys = {}; touch.left = touch.right = touch.jump = touch.run = touch.slide = false;
     if (G.state === 'play') togglePause();
   });
   Array.prototype.forEach.call(pad.querySelectorAll('button[data-k]'), function (btn) {
@@ -57,6 +60,7 @@
       e.preventDefault(); AU.init(); touch[k] = true;
       if (k === 'jump') jumpBuf = 0.12;
       if (k === 'run') fireReq = true;
+      if (k === 'dash') dashReq = true;
       try { btn.setPointerCapture(e.pointerId); } catch (err) {}
     });
     function up(e) { e.preventDefault(); touch[k] = false; }
@@ -203,7 +207,7 @@
   try { best = parseInt(localStorage.getItem('wassel-best') || '0', 10) || 0; } catch (e) {}
 
   function makePlayer(tx, ty, power) {
-    P = { x: 0, y: 0, w: 16, h: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, inv: 0, star: 0, coyote: 0, anim: 0,
+    P = { x: 0, y: 0, w: 16, h: 30, normalH: 30, vx: 0, vy: 0, face: 1, ground: false, head: null, power: 0, inv: 0, star: 0, coyote: 0, jumps: 0, wallDir: 0, slide: false, dashCd: 0, dashT: 0, anim: 0,
       combo: 0, deadT: 0, hopped: false, hidden: false, hitX: false, sq: 0, dustT: 0 };
     setPower(power || 0);
     P.x = tx * T + (T - P.w) / 2;
@@ -211,7 +215,7 @@
   }
   function setPower(n) {
     var oh = P.h, ow = P.w;
-    P.power = n; P.w = n > 0 ? 22 : 16; P.h = n > 0 ? 54 : 30;
+    P.power = n; P.w = n > 0 ? 22 : 16; P.normalH = n > 0 ? 54 : 30; P.h = P.normalH;
     P.x += (ow - P.w) / 2; P.y -= (P.h - oh);
   }
   function loadLevel(i, power) {
@@ -221,7 +225,7 @@
     enemies = []; items = []; fireballs = []; enemyShots = []; parts = []; pops = []; bumps = {};
     L.ents.forEach(function (d) { enemies.push(makeEnemy(d.t, d.x, d.y)); });
     makePlayer(L.sx, L.sy, power);
-    jumpBuf = 0; fireReq = false;
+    jumpBuf = 0; fireReq = false; dashReq = false;
   }
   function startIntro() { G.state = 'intro'; G.timer = 2.0; setOnlinePlaying(true); AU.stop(); }
   function startGame() {
@@ -251,6 +255,25 @@
   }
   function approach(v, t, d) { return v < t ? Math.min(v + d, t) : Math.max(v - d, t); }
   function hit(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+  function canOccupy(x, y, w, h) {
+    var x0 = Math.floor(x / T), x1 = Math.floor((x + w - 0.01) / T);
+    var y0 = Math.floor(y / T), y1 = Math.floor((y + h - 0.01) / T);
+    for (var ty = y0; ty <= y1; ty++) for (var tx = x0; tx <= x1; tx++) if (solidAt(tx, ty)) return false;
+    return true;
+  }
+  // Ajuste la hauteur du personnage sans le faire traverser un plafond.
+  function updateSlide() {
+    var want = isSlide() && P.ground && P.dashT <= 0;
+    if (want && !P.slide) {
+      var slideH = P.power > 0 ? 34 : 20;
+      P.y += P.h - slideH; P.h = slideH; P.slide = true;
+    } else if (!want && P.slide) {
+      var delta = P.normalH - P.h;
+      if (canOccupy(P.x, P.y - delta, P.w, P.normalH)) {
+        P.y -= delta; P.h = P.normalH; P.slide = false;
+      }
+    }
+  }
   function moveX(e, dt) {
     e.hitX = false; e.x += e.vx * dt;
     var x0 = Math.floor(e.x / T), x1 = Math.floor((e.x + e.w - 0.01) / T), y0 = Math.floor(e.y / T), y1 = Math.floor((e.y + e.h - 0.01) / T);
@@ -474,21 +497,42 @@
     AU.stop(); AU.setStar(false); SFX.die();
   }
   function updatePlayer(dt) {
-    var dir = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0), maxV = isRun() ? 280 : 180;
-    if (dir) { P.face = dir; P.vx = approach(P.vx, dir * maxV, (P.ground ? (P.vx * dir < 0 ? 2600 : 1300) : 900) * dt); }
-    else P.vx = approach(P.vx, 0, (P.ground ? 1500 : 250) * dt);
+    var dir = (isRight() ? 1 : 0) - (isLeft() ? 1 : 0);
+    P.dashCd = Math.max(0, P.dashCd - dt);
+    if (dashReq) {
+      dashReq = false;
+      if (P.dashCd <= 0 && !P.slide) {
+        P.dashCd = 1.0; P.dashT = 0.18; P.vx = P.face * 520; P.vy = 0; P.inv = Math.max(P.inv, 0.2);
+        dust(P.x + P.w / 2, P.y + P.h, 7, -P.face);
+      }
+    }
+    updateSlide();
+    if (P.dashT > 0) {
+      P.dashT -= dt; P.vx = P.face * 520;
+    } else {
+      var maxV = P.slide ? 320 : (isRun() ? 280 : 180);
+      if (dir) { P.face = dir; P.vx = approach(P.vx, dir * maxV, (P.ground ? (P.vx * dir < 0 ? 2600 : 1300) : 900) * dt); }
+      else P.vx = approach(P.vx, 0, (P.ground ? (P.slide ? 900 : 1500) : 250) * dt);
+    }
     if (P.ground) P.coyote = 0.1; else P.coyote -= dt;
     jumpBuf -= dt;
-    if (jumpBuf > 0 && P.coyote > 0) {
-      P.vy = -(640 + Math.abs(P.vx) * 0.1); P.ground = false; P.coyote = 0; jumpBuf = 0; P.sq = 0.2;
+    if (jumpBuf > 0 && P.dashT <= 0 && !P.slide && (P.coyote > 0 || P.jumps < 2 || P.wallDir)) {
+      if (P.wallDir && !P.ground && P.coyote <= 0) {
+        P.vx = -P.wallDir * 300; P.vy = -640; P.jumps = 1;
+      } else {
+        P.vy = -(640 + Math.abs(P.vx) * 0.1); P.jumps++;
+      }
+      P.ground = false; P.coyote = 0; P.wallDir = 0; jumpBuf = 0; P.sq = 0.2;
       SFX.jump(P.power > 0); dust(P.x + P.w / 2, P.y + P.h, 4);
     }
-    P.vy = Math.min(P.vy + (P.vy < 0 ? (isJump() ? 1500 : 3200) : 2500) * dt, 820);
+    if (P.dashT <= 0) P.vy = Math.min(P.vy + (P.vy < 0 ? (isJump() ? 1500 : 3200) : 2500) * dt, 820);
     var wasG = P.ground, vy0 = P.vy;
+    var wallInput = dir;
     moveX(P, dt);
+    P.wallDir = P.hitX && !P.ground ? wallInput : 0;
     if (P.x < G.camX) { P.x = G.camX; if (P.vx < 0) P.vx = 0; }
     moveY(P, dt);
-    if (P.ground) P.combo = 0;
+    if (P.ground) { P.combo = 0; P.jumps = 0; P.wallDir = 0; }
     if (P.ground && !wasG && vy0 > 280) { P.sq = -Math.min(0.2, vy0 / 3600); dust(P.x + P.w / 2, P.y + P.h, 6); if (vy0 > 480) SFX.land(); }
     if (P.head) { bumpBlock(P.head.tx, P.head.ty); G.shake = Math.max(G.shake, 1.5); }
     P.dustT -= dt;
@@ -731,7 +775,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
       G: G, startGame: startGame, loadLevel: loadLevel, startIntro: startIntro, update: update, render: render,
       P: function () { return P; }, L: function () { return L; }, enemies: function () { return enemies; }, items: function () { return items; },
       bumpBlock: bumpBlock, setPower: setPower, keys: keys, spawn: function (t, x, y) { enemies.push(makeEnemy(t, x, y)); },
-      press: function (c) { keys[c] = true; if (JUMP_KEYS[c]) jumpBuf = 0.12; if (RUN_KEYS[c]) fireReq = true; },
+      press: function (c) { keys[c] = true; if (JUMP_KEYS[c]) jumpBuf = 0.12; if (RUN_KEYS[c]) fireReq = true; if (DASH_KEYS[c]) dashReq = true; },
       release: function (c) { keys[c] = false; }, parts: function () { return parts; }
     });
   }
