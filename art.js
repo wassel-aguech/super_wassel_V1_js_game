@@ -714,6 +714,11 @@
     var cx = e.x + e.w / 2, by = e.y + e.h;
     ctx.save();
     ctx.translate(cx, by);
+    // Ombre au sol, plus éloignée pour les drones en vol.
+    ctx.fillStyle = 'rgba(0,0,0,0.24)';
+    ctx.beginPath();
+    ctx.ellipse(0, e.t.indexOf('drone') === 0 ? 20 : 1, e.t.indexOf('drone') === 0 ? 13 : 11, e.t.indexOf('drone') === 0 ? 3 : 2.5, 0, 0, TAU);
+    ctx.fill();
     if (e.state === 'fall') { ctx.translate(0, -e.h / 2); ctx.rotate(t * 8 * (e.vx >= 0 ? 1 : -1)); ctx.translate(0, e.h / 2); }
     ctx.lineJoin = 'round';
     // ---------- ROBO-ROVER ----------
