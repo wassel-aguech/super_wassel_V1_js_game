@@ -459,19 +459,56 @@
   };
 
   /* ------------------------------------------------------------ tuiles */
+  /* WASSEL GALAXY : cheminees de fusee / tours de lancement */
   function pipeBody(ctx, px, py, left, cap) {
-    var inset = 3;
+    var inset = 2;
     var x0 = left ? px + inset : px, x1 = left ? px + T : px + T - inset;
-    var g = left ? lin(ctx, px, 0, px + T, 0, [0, '#177026', 0.38, '#8cf06a', 0.62, '#43b94c', 1, '#2b9c3b']) : lin(ctx, px, 0, px + T, 0, [0, '#2b9c3b', 0.5, '#2f9f3d', 1, '#0f5a21']);
-    var y0 = cap ? py + 12 : py;
+    var tt = (typeof performance !== 'undefined' ? performance.now()/1000 : 0);
+    // corps metallique
+    var g = lin(ctx, x0, 0, x1, 0, [0, '#e8eefc', 0.25, '#9aa8cc', 0.55, '#5a6a94', 1, '#2e3a5e']);
+    var y0 = cap ? py + 14 : py;
     ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, py + T - y0);
-    ctx.fillStyle = '#0b3d17';
+    // panneaux + rivets
+    ctx.fillStyle = 'rgba(10,16,40,0.35)';
+    ctx.fillRect(x0+6, y0, 2, py+T-y0); ctx.fillRect(x1-8, y0, 2, py+T-y0);
+    ctx.fillStyle = '#0b1026';
+    [[4,6],[12,6]].forEach(function(o){
+      circle(ctx, x0+o[0]+6, y0+o[1]+4, 1.3); ctx.fill();
+    });
+    // bandes hazard orange
+    if ((py/32|0)%2===0){
+      ctx.fillStyle = '#ff7a1a';
+      ctx.fillRect(x0, y0+8, x1-x0, 3);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      for (var hx=x0; hx<x1; hx+=8) ctx.fillRect(hx, y0+8, 4, 3);
+    }
+    // lumieres laterales clignotantes
+    var blink = Math.sin(tt*4 + px*0.1) > 0;
+    ctx.fillStyle = blink ? '#ff3b3b' : '#5a1010';
+    circle(ctx, left? x0+4 : x1-4, y0+16, 2); ctx.fill();
+    ctx.fillStyle = blink ? 'rgba(255,60,60,0.4)' : 'rgba(255,60,60,0)';
+    circle(ctx, left? x0+4 : x1-4, y0+16, 4.5); ctx.fill();
+    // bordures
+    ctx.fillStyle = '#0b1026';
     if (left) ctx.fillRect(x0, y0, 2, py + T - y0); else ctx.fillRect(x1 - 2, y0, 2, py + T - y0);
     if (cap) {
-      var lx0 = left ? px - 3 : px, lx1 = left ? px + T : px + T + 3;
-      ctx.fillStyle = g; rrect(ctx, lx0, py, lx1 - lx0, 16, 3); ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = '#0b3d17'; ctx.stroke();
-      ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(left ? lx0 + 2 : lx0, py + 12, lx1 - lx0 - 2, 4);
+      var lx0 = left ? px - 4 : px, lx1 = left ? px + T : px + T + 4;
+      // collerette de lancement
+      ctx.fillStyle = lin(ctx, 0, py, 0, py+18, [0, '#ff9d2e', 0.4, '#c9d4f5', 1, '#6a7aa8']);
+      rrect(ctx, lx0, py, lx1 - lx0, 18, 4); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#0b1026'; ctx.stroke();
+      // voyants verts sur collerette
+      for (var li=0; li<4; li++){
+        var lxp = lx0 + 6 + li*((lx1-lx0-12)/3);
+        var on = (Math.sin(tt*5 + lxp*0.2)>0);
+        circle(ctx, lxp, py+9, 2.2); ctx.fillStyle = on ? '#39ff88' : '#0e4a2a'; ctx.fill();
+        ctx.lineWidth = 1; ctx.strokeStyle = '#0b1026'; ctx.stroke();
+        if (on){ ctx.fillStyle = 'rgba(57,255,136,0.35)'; circle(ctx, lxp, py+9, 4); ctx.fill(); }
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(lx0+2, py+14, lx1-lx0-4, 4);
+      // halo chaud en haut
+      ctx.fillStyle = 'rgba(255,150,40,0.18)';
+      ctx.fillRect(lx0, py-3, lx1-lx0, 3);
     }
   }
 
@@ -517,24 +554,43 @@
         break;
       }
       case '?': case 'M': case 'W': {
-        ctx.fillStyle = lin(ctx, 0, py, 0, py + T, [0, '#ffe888', 0.5, '#f7b929', 1, '#e0900f']); ctx.fillRect(px, py, T, T);
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(px + 2, py + 2, T - 4, 2.5); ctx.fillRect(px + 2, py + 2, 2.5, T - 4);
-        ctx.fillStyle = 'rgba(120,60,0,0.45)'; ctx.fillRect(px + 2, py + T - 4.5, T - 4, 2.5); ctx.fillRect(px + T - 4.5, py + 2, 2.5, T - 4);
-        ctx.strokeStyle = th.outline; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, T - 2, T - 2);
-        ctx.fillStyle = '#8a5200';
+        // WASSEL GALAXY : capsules d'energie
+        var capCol = c === 'M' ? ['#ff9d2e','#ff5a14','#7a2500'] : c === 'W' ? ['#ff9bdc','#c81f8f','#5a0a3a'] : ['#8af0ff','#00b6ff','#063a5a'];
+        var glow = 0.5 + Math.sin(t*4 + tx*0.7)*0.25;
+        ctx.save();
+        ctx.shadowColor = capCol[1]; ctx.shadowBlur = 12*glow + 6;
+        ctx.fillStyle = lin(ctx, 0, py, 0, py+T, [0, '#2a3350', 0.25, '#141b38', 1, '#090e24']);
+        rrect(ctx, px+1, py+1, T-2, T-2, 5); ctx.fill();
+        ctx.restore();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#0b1026';
+        rrect(ctx, px+1, py+1, T-2, T-2, 5); ctx.stroke();
+        // cadre metal
+        ctx.strokeStyle = '#9aa8cc'; ctx.lineWidth = 1;
+        rrect(ctx, px+3, py+3, T-6, T-6, 4); ctx.stroke();
+        // vitre plasma
+        var pg = ctx.createRadialGradient(px+16, py+16, 2, px+16, py+16, 14);
+        pg.addColorStop(0, capCol[0]); pg.addColorStop(0.6, capCol[1]); pg.addColorStop(1, 'rgba(0,0,0,0.6)');
+        ctx.fillStyle = pg;
+        rrect(ctx, px+6, py+6, T-12, T-12, 4); ctx.fill();
+        // scanline animee
+        var scan = py+6 + ((t*30 + tx*13) % (T-12));
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillRect(px+6, scan, T-12, 2);
+        // symbole neon
+        ctx.save(); ctx.font = 'bold 20px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
+        var sym = c === '?' ? '?' : c === 'M' ? '▲' : '★';
+        ctx.fillStyle = '#fff'; ctx.fillText(sym, px+16, py+17);
+        ctx.restore();
+        // rivets + voyants
+        ctx.fillStyle = '#0b1026';
         circle(ctx, px + 5.5, py + 5.5, 1.6); ctx.fill(); circle(ctx, px + T - 5.5, py + 5.5, 1.6); ctx.fill();
         circle(ctx, px + 5.5, py + T - 5.5, 1.6); ctx.fill(); circle(ctx, px + T - 5.5, py + T - 5.5, 1.6); ctx.fill();
-        ctx.save(); ctx.font = '24px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#8a4a00'; ctx.fillText('?', px + 17, py + 18.5);
-        ctx.fillStyle = '#fff6c8'; ctx.fillText('?', px + 16, py + 17); ctx.restore();
-        var ph = (t * 0.55 + tx * 0.11) % 1;
-        if (ph < 0.22) {
-          ctx.save(); ctx.beginPath(); ctx.rect(px + 2, py + 2, T - 4, T - 4); ctx.clip();
-          var sx = px - 12 + ph / 0.22 * (T + 24);
-          ctx.fillStyle = 'rgba(255,255,255,0.55)';
-          ctx.beginPath(); ctx.moveTo(sx, py + T); ctx.lineTo(sx + 7, py + T); ctx.lineTo(sx + 19, py); ctx.lineTo(sx + 12, py); ctx.fill();
-          ctx.restore();
-        }
+        var on2 = Math.sin(t*6 + tx)>0;
+        circle(ctx, px+16, py+3.5, 1.8); ctx.fillStyle = on2 ? '#39ff88' : '#0e4a2a'; ctx.fill();
+        // reflet
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.beginPath(); ctx.ellipse(px+11, py+11, 4, 2, -0.5, 0, TAU); ctx.fill();
         break;
       }
       case 'U': {
