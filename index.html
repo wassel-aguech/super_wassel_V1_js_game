@@ -166,57 +166,113 @@
     * { transition: none !important; }
   }
   @media (pointer: coarse) and (orientation: portrait) {
-   body {
-     background: #0c1733;
-     overflow-x: hidden;
-     overflow-y: auto;
-     align-items: stretch;
-   }
-   header, .stage {
-     width: 100%;
-   }
-   header {
-     align-items: flex-start;
-   }
-   .brand {
-     min-width: 0;
-   }
-   h1 {
-     font-size: clamp(18px, 5vw, 24px);
-   }
-   h1 small {
-     letter-spacing: .08em;
-   }
-   .tools {
-     width: 100%;
-     justify-content: center;
-   }
-   .online-stats {
-     order: 5;
-   }
-   .stage {
-     max-width: 800px;
-   }
-   .pad {
-     display: grid;
-     grid-template-columns: 1fr;
-     justify-items: center;
-     width: 100%;
-     gap: 10px;
-   }
-   .pad .grp {
-     justify-content: center;
-     gap: 10px;
-   }
-   .pad .grp:last-child {
-     display: grid;
-     grid-template-columns: repeat(3, 68px);
-     gap: 10px;
-   }
-   footer {
-     text-align: center;
-     line-height: 1.6;
-   }
+    body {
+      background: #0c1733;
+      overflow-x: hidden;
+      overflow-y: auto;
+      align-items: stretch;
+    }
+    header, .stage { width: 100%; }
+    header { align-items: flex-start; }
+    .brand { min-width: 0; }
+    h1 { font-size: clamp(18px, 5vw, 24px); }
+    h1 small { letter-spacing: .08em; }
+    .tools {
+      width: 100%;
+      justify-content: center;
+    }
+    .online-stats { order: 5; }
+    .stage { max-width: 800px; }
+    .pad {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 800px;
+      gap: 12px;
+      padding: 0 8px;
+    }
+    .pad .grp {
+      gap: 8px;
+    }
+    .pad .grp:last-child {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 8px;
+    }
+    .pad button {
+      width: 60px;
+      height: 60px;
+    }
+    footer {
+      text-align: center;
+      line-height: 1.6;
+    }
+  }
+  @media (pointer: coarse) and (orientation: landscape) {
+    :root { --chrome: 70px; }
+    body {
+      background: #0c1733;
+      overflow: hidden;
+      gap: 4px;
+      padding-block: 4px;
+      padding-inline: max(8px, env(safe-area-inset-left, 0px));
+    }
+    header {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 44px;
+      align-items: center;
+    }
+    .brand img { width: 26px; height: 26px; }
+    h1 { font-size: 17px; }
+    h1 small { font-size: 8px; }
+    .tools { gap: 5px; }
+    .tools button, .vol, .online-stats {
+      font-size: 10px;
+      padding: 4px 7px;
+    }
+    .vol input[type="range"] { width: 58px; }
+    .stage {
+      width: min(100%, calc((100dvh - var(--chrome)) * 800 / 448));
+      max-width: 100%;
+    }
+    .hint, .portrait-tip, footer { display: none; }
+    .pad {
+      position: fixed;
+      z-index: 5;
+      left: max(8px, env(safe-area-inset-left, 0px));
+      right: max(8px, env(safe-area-inset-right, 0px));
+      bottom: max(6px, env(safe-area-inset-bottom, 0px));
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: auto;
+      max-width: none;
+      padding: 0;
+      pointer-events: none;
+    }
+    .pad .grp { gap: 8px; pointer-events: auto; }
+    .pad .grp:last-child {
+      display: grid;
+      grid-template-columns: repeat(3, 54px);
+      gap: 7px;
+    }
+    .pad button {
+      width: 54px;
+      height: 54px;
+      border-width: 2px;
+      background: rgba(8, 14, 36, .72);
+    }
+  }
+  @media (pointer: coarse) and (orientation: portrait) and (max-width: 380px) {
+    .pad .grp:last-child {
+      grid-template-columns: repeat(3, 52px);
+    }
+    .pad button {
+      width: 52px;
+      height: 52px;
+    }
   }
   .online-stats {
      display:flex; align-items:center; gap:8px;
@@ -277,7 +333,7 @@
     <button type="button" class="b" data-k="slide" aria-label="Glissade">▼</button>
     <button type="button" data-k="jump" aria-label="Sauter">▲</button>
     <button type="button" class="b" data-k="special" aria-label="Capacité spéciale">E</button>
-    <button type="button" class="b" data-k="continue" aria-label="Continuer">▶</button>
+    <button type="button" class="b" data-k="continue" id="continueBtn" aria-label="Continuer" hidden>▶</button>
   </div>
 </div>
 

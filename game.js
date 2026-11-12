@@ -11,7 +11,7 @@
      } catch (e) {}
    }
   var canvas = $('game'), ctx = canvas.getContext('2d'), stage = $('stage');
-  var playBtn = $('playBtn'), endEl = $('end'), endTitle = $('endTitle'), endText = $('endText');
+  var playBtn = $('playBtn'), continueBtn = $('continueBtn'), endEl = $('end'), endTitle = $('endTitle'), endText = $('endText');
   var muteBtn = $('muteBtn'), pauseBtn = $('pauseBtn'), pad = $('pad');
   var TOUCH = false;
   try { TOUCH = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) {}
@@ -83,6 +83,9 @@
   function togglePause() {
   if (G.state === 'play') { G.prev = G.state; G.state = 'pause'; pauseBtn.textContent = 'Reprendre'; AU.pause(true); setOnlinePlaying(false); }
   else if (G.state === 'pause') { G.state = G.prev || 'play'; pauseBtn.textContent = 'Pause'; AU.pause(false); SFX.pause(); last = performance.now(); setOnlinePlaying(true); }
+}
+function syncTouchControls() {
+  continueBtn.hidden = G.state !== 'dialog' && G.state !== 'shop';
 }
   muteBtn.addEventListener('click', function () { AU.init(); toggleMute(); });
   pauseBtn.addEventListener('click', togglePause);
@@ -737,6 +740,7 @@
 
     function update(dt) {
     G.t += dt;
+      syncTouchControls();
     if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win' || G.state === 'dialog' || G.state === 'shop') {
       if (G.state === 'over' || G.state === 'win') updateParticles(dt);
       return;
