@@ -78,13 +78,12 @@
     });
 
   window.WASSELOnline = {
-  setPlaying: function (value) {
-    value = value === true;
-    if (playing === value) return;
-    playing = value;
-    trackPresence();
-  }
-};
+    setPlaying: function (value) {
+      value = value === true;
+      if (playing === value) return;
+      playing = value;
+      trackPresence();
+    }
   };
 
   document.addEventListener('visibilitychange', trackPresence);

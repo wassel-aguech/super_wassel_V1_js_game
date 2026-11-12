@@ -520,13 +520,11 @@
     for (var k in bumps) { bumps[k] -= dt; if (bumps[k] <= 0) delete bumps[k]; }
   }
 
-  function update(dt) {
-  G.t += dt;
-  if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
-    if (G.state === 'over' || G.state === 'win') updateParticles(dt);
-    return;
-  }
-  if (G.freeze > 0) { G.freeze -= dt; return; }
+    function update(dt) {
+    G.t += dt;
+    if (G.state === 'title' || G.state === 'pause' || G.state === 'over' || G.state === 'win') {
+      if (G.state === 'over' || G.state === 'win') updateParticles(dt);
+      return;
     }
     if (G.freeze > 0) { G.freeze -= dt; return; }
     G.shake = Math.max(0, G.shake - dt * 28); G.flash = Math.max(0, G.flash - dt * 1.4);
